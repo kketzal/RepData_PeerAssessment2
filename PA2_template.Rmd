@@ -1,0 +1,25 @@
+---
+title: "Reproducible Research: Peer Assessment 2"
+output: 
+  html_document:
+    keep_md: true
+---
+
+---
+## **Loading and preprocessing the data**
+  
+### 1. Unzipping "activity.zip" file and reading the CSV file
+
+```{r  echo=TRUE}
+fileName <- "repdata%2Fdata%2FStormData.csv.bz2"
+URL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+
+# If file doesn't exist in current working directory, I try to download from website
+if(!file.exists(fileName))
+    download.file(URL, fileName, method = "curl")
+
+data <- read.csv(fileName)
+head(data)
+```
+
+  
