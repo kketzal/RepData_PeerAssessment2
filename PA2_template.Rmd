@@ -6,20 +6,41 @@ output:
 ---
 
 ---
+# Types of weather events that are most harmful with respect to population health and with respect their economic consequence 
+
+# Synopsis:
+
+# Data Processing:
+
 ## **Loading and preprocessing the data**
   
-### 1. Unzipping "activity.zip" file and reading the CSV file
+### 1. Downloading/loading "Storm Data"" file and reading the CSV file
 
-```{r  echo=TRUE}
-fileName <- "repdata%2Fdata%2FStormData.csv.bz2"
+```{r  echo=TRUE, cache=TRUE}
+compressedFileName <- "repdata%2Fdata%2FStormData.csv.bz2"
+
 URL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
 
 # If file doesn't exist in current working directory, I try to download from website
-if(!file.exists(fileName))
-    download.file(URL, fileName, method = "curl")
+if(!file.exists(compressedFileName))
+    download.file(URL, compressedFileName, method = "curl")
 
-data <- read.csv(fileName)
+# If the file doesn't exist in current working directory after downloading, there are any
+# problem downloading this file, or there are any other problem...aborting
+if(!file.exists(compressedFileName))    
+    stop("Required file doesn't exist in the current working directory! Aborting...")
+    
+# loading data
+data <- read.csv(compressedFileName)
+
+# Get the column names and check if they are properly formatted
+colnames(data) <- make.names(colnames(data))
+
+```
+  
+There are `r nrow(data)` rows and `r ncol(data)` columns in this dataset.
+
+```{r echo=TRUE}
+
 head(data)
 ```
-
-  
