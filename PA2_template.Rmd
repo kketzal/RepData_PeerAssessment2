@@ -6,7 +6,7 @@ output:
 ---
 
 ---
-# Types of weather events that are most harmful with respect to population health and with respect their economic consequence 
+# Types of weather events that are most harmful with respect to population health and with respect their economic consequences
 
 # Synopsis:
 
