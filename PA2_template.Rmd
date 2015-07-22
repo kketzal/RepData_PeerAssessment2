@@ -41,9 +41,11 @@ colnames(data) <- make.names(colnames(data))
 
 ```
   
-There are `r nrow(data)` rows and `r ncol(data)` columns in this dataset.
+There are `r nrow(data)` rows or observations and `r ncol(data)` columns or variables in this dataset.
 
 ```{r echo=TRUE}
 
 head(data)
 ```
+
+There is some documentation of this dataset available [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf).
