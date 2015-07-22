@@ -17,6 +17,9 @@ output:
 ### 1. Downloading/loading "Storm Data"" file and reading the CSV file
 
 ```{r  echo=TRUE, cache=TRUE}
+## I need to change my LOCALE (spanish) to English...
+Sys.setlocale('LC_TIME', 'en_US.UTF-8')
+
 compressedFileName <- "repdata%2Fdata%2FStormData.csv.bz2"
 
 URL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
