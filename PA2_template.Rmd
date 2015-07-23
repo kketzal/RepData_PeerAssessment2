@@ -5,16 +5,20 @@ output:
     keep_md: true
 ---
 
----
-# Types of weather events that are most harmful with respect to population health and with respect to economic consequences
 
-# Synopsis:
+# **Title**
 
-# Data Processing:
+## Types of weather events that are most harmful with respect to population health and with respect to economic consequences
 
-## **Loading and preprocessing the data**
+# **Synopsis**
+
+
+# **Data Processing**
+
+
+## Loading and preprocessing the data
   
-### 1. Downloading/loading "Storm Data"" file and reading the CSV file
+### 1. Downloading/loading "Storm Data" file and reading the CSV file
 
 ```{r  echo=TRUE, cache=TRUE}
 ## I need to change my LOCALE (spanish) to English...
@@ -48,4 +52,77 @@ There are `r nrow(data)` rows or observations and `r ncol(data)` columns or vari
 head(data)
 ```
 
-There is some documentation of this dataset available [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf).
+### 2. "Storm Data" Exploratory analysis 
+
+There is some documentation of this dataset available [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). 
+More information can be obtained from the [NOAA Storm Events Database](http://www.ncdc.noaa.gov/stormevents/ftp.jsp). 
+
+Reading these two websites and for the topic of this paper, we can subset the *data* CSV file extracting only the following columns or variables:   
+
+* BGN_DATE (event start date)
+* STATE (the USA state where event occurs)
+* EVTYPE (climatic event)
+* FATALITIES (numerical value for an occurrence of death)
+* INJURIES (numerical value for non fatal damage, hurt, harm, ...)
+* PROPDMG (numerical value for property damage)
+* PROPDMGEXP (value for adjusting PROPDMG value)
+* CROPDMG (numerical value for crop damage)
+* CROPDMGEXP (value for adjusting CROPDMG value)
+
+The others columns or variables aren't important for the analysis in this article.
+
+Now, we are going to subset the dataset.
+
+```{r echo=TRUE, cache=TRUE}
+suppressPackageStartupMessages(library(dplyr))
+
+# select only the variables we are interested in
+sub_data <- data %>% select(BGN_DATE, STATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP,CROPDMG, CROPDMGEXP)
+
+# For saving computer resources, we can remove the initial dataset
+rm(data)
+
+# now, we have a narrow dataset
+head(sub_data)
+```
+
+For this analysis we want to study types of weather events that are most harmful with respect to population health and with respect to economic consequences, so we want dataset observations with values over "0" (zero) in the following variables: FATALITIES, INJURIES, PROPDMG and CROPDMG. 
+More over, we have two different questions to resolve:
+> 1. Weather events that are most harmful with respect to population health
+> 2. Weather events that are most harmful with respect to economic consequences
+
+For this purpouse, we need to extract these differents observations from the *sub_data* dataset. One dataset for population health, and another dataset for economic consequences,
+
+```{r echo=TRUE, cache=TRUE}
+sub_data_health <- sub_data %>% filter(FATALITIES > 0 | INJURIES > 0)
+sub_data_economic <- sub_data %>% filter(PROPDMG > 0 | CROPDMG > 0)
+
+# For saving computer resources, we can remove the initial dataset
+rm(sub_data)
+```
+
+Now, there are `r nrow(sub_data)` rows or observations and `r ncol(sub_data)` columns or variables in this *sub_data* dataset and we have reduced the data size significantly.
+
+
+
+
+At this point, we are going to check the event types in our dataset. First, we'll check the number of event types.
+
+```{r echo=TRUE, cache=TRUE}
+length(levels(sub_data$EVTYPE))
+```
+
+In the official documentation, [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf), we can read that there are 48 event types (chapter 7, points from 7.1 to 7.48), and we have `r length(levels(sub_data$EVTYPE))` event types in our dataset. We need to transform and reduce them.
+
+In first place, we need to know how many ocurrences of each event type.
+
+```{r echo=TRUE, cache=TRUE}
+summary(sub_data$EVTYPE)
+```
+
+In this summary, we can see that THUNDERSTORM WIND and other variations of the same climatic event are the more common (TSTM WIND, THUNDERSTORM WINDS, THUNDERSTORM WINDSS, THUNDERSTORM, TSTM WIND (G45), THUNDERSTORM WINDS/HAIL, WINDS, GUSTY WINDS). The idea is to group these events in one big group with name **THUNDERSTORM WIND**, like this event is named in the official documentation.
+
+
+levels(as.factor(grep("*Thunderst*", sub_data$EVTYPE, ignore.case = T, value = T)))
+my_group <- group_by(sub_data,EVTYPE, INJURIES, FATALITIES, PROPDMG, CROPDMG)
+summarise_each(my_group, funs(sum))
