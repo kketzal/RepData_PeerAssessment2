@@ -21,12 +21,14 @@ output:
 ### 1. Downloading/loading "Storm Data" file and reading the CSV file
 
 ```{r  echo=TRUE, cache=TRUE}
+# suppressPackageStartupMessages(library(data.table))
+
 ## I need to change my LOCALE (spanish) to English...
 Sys.setlocale('LC_TIME', 'en_US.UTF-8')
 
-compressedFileName <- "repdata%2Fdata%2FStormData.csv.bz2"
+compressedFileName <- "repdata_data_StormData.csv.bz2"
 
-URL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+URL <- "https://d396qusza40orc.cloudfront.net/repdata_data_StormData.csv.bz2"
 
 # If file doesn't exist in current working directory, I try to download from website
 if(!file.exists(compressedFileName))
@@ -44,20 +46,20 @@ data <- read.csv(compressedFileName)
 colnames(data) <- make.names(colnames(data))
 
 ```
-  
-There are `r nrow(data)` rows or observations and `r ncol(data)` columns or variables in this dataset.
 
 ```{r echo=TRUE}
 
 head(data)
 ```
 
-### 2. "Storm Data" Exploratory analysis 
+### 2. Storm Data - Exploratory analysis 
 
 There is some documentation of this dataset available [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). 
 More information can be obtained from the [NOAA Storm Events Database](http://www.ncdc.noaa.gov/stormevents/ftp.jsp). 
 
-Reading these two websites and for the topic of this paper, we can subset the *data* CSV file extracting only the following columns or variables:   
+There are **`r nrow(data)` rows** or observations and **`r ncol(data)` columns** or variables in this dataset.
+
+Reading these two websites above and, for the topic of this paper, we can subset the *data* CSV file extracting only the following columns or variables:   
 
 * BGN_DATE (event start date)
 * STATE (the USA state where event occurs)
@@ -73,7 +75,7 @@ The others columns or variables aren't important for the analysis in this articl
 
 Now, we are going to subset the dataset.
 
-```{r echo=TRUE, cache=TRUE}
+```{r echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE}
 suppressPackageStartupMessages(library(dplyr))
 
 # select only the variables we are interested in
@@ -82,16 +84,55 @@ sub_data <- data %>% select(BGN_DATE, STATE, EVTYPE, FATALITIES, INJURIES, PROPD
 # For saving computer resources, we can remove the initial dataset
 rm(data)
 
-# now, we have a narrow dataset
+# now, we have a smaller dataset
 head(sub_data)
 ```
 
-For this analysis we want to study types of weather events that are most harmful with respect to population health and with respect to economic consequences, so we want dataset observations with values over "0" (zero) in the following variables: FATALITIES, INJURIES, PROPDMG and CROPDMG. 
-More over, we have two different questions to resolve:
+For this analysis we want to study types of weather events that are most harmful with respect to population health and with respect to economic consequences, so we want dataset observations with values over "0" (zero) in the following variables: FATALITIES, INJURIES, PROPDMG and CROPDMG.
+
+```{r echo=TRUE, cache=TRUE}
+
+sub_data <- sub_data %>% filter(FATALITIES > 0 | INJURIES > 0 | PROPDMG > 0 | CROPDMG > 0)
+
+```
+
+Now, there are **`r nrow(sub_data)` rows** or observations and **`r ncol(sub_data)` columns** or variables in *sub_data* dataset. We have reduced the data size significantly.
+
+```{r echo=TRUE, cache=TRUE}
+#summary of our dataset
+summary(sub_data)
+
+```
+
+### 3. Storm Data - Cleaning the Data
+
+In the official documentation, [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf), we can read that there are 48 event types (chapter 7, points from 7.1 to 7.48), and we have `r length(levels(sub_data$EVTYPE))` event types in our dataset. We'll need to transform and reduce them.
+
+In first place, we are going to know how many ocurrences of each event type there are in our *sub_data* dataset.
+
+```{r echo=TRUE, cache=TRUE}
+summary(sub_data$EVTYPE)
+```
+
+In this summary, we can see that THUNDERSTORM WIND and other variations of the same climatic event are the more common (TSTM WIND, THUNDERSTORM WINDS, THUNDERSTORM WINDSS, THUNDERSTORM, TSTM WIND (G45), THUNDERSTORM WINDS/HAIL, WINDS, GUSTY WINDS). The idea is to group these events in one big group with name **THUNDERSTORM WIND**, like this event is named in the official documentation. We'll do the same process for others climatic events with similar variable name in our dataset. This way we reduce the dataset dimensions.
+
+Also, there are duplicate event names, and the same event name in lowercase and in uppercase, so we'll transform all event names to uppercase, for grouping purpouses.
+
+```{r echo=TRUE, cache=TRUE}
+
+# Transform all event names to UPPERCASE. This transform the column "as.character".
+sub_data <- mutate(sub_data, EVTYPE = as.factor(toupper(EVTYPE)))
+
+```
+
+Now, we have two different questions to resolve:
+
 > 1. Weather events that are most harmful with respect to population health
 > 2. Weather events that are most harmful with respect to economic consequences
 
-For this purpouse, we need to extract these differents observations from the *sub_data* dataset. One dataset for population health, and another dataset for economic consequences,
+The climatic events that affect the first question may not be the same that affect the second question and vice versa.
+
+For this purpouse, we need to extract these differents observations from the *sub_data* dataset. One dataset for population health, and another dataset for economic consequences.
 
 ```{r echo=TRUE, cache=TRUE}
 sub_data_health <- sub_data %>% filter(FATALITIES > 0 | INJURIES > 0)
@@ -101,26 +142,68 @@ sub_data_economic <- sub_data %>% filter(PROPDMG > 0 | CROPDMG > 0)
 rm(sub_data)
 ```
 
-Now, there are `r nrow(sub_data)` rows or observations and `r ncol(sub_data)` columns or variables in this *sub_data* dataset and we have reduced the data size significantly.
+Now, there are **`r nrow(sub_data_health)` rows** or observations and **`r ncol(sub_data_health)` columns** or variables in *sub_data_health* dataset, and  **`r nrow(sub_data_economic)` rows** or observations and **`r ncol(sub_data_economic)` columns** or variables in *sub_data_economic* dataset.
 
-
-
-
-At this point, we are going to check the event types in our dataset. First, we'll check the number of event types.
+We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. We start looking for and replacing the more harmful climatic events like TORNADO, HURRICANES, ...
 
 ```{r echo=TRUE, cache=TRUE}
-length(levels(sub_data$EVTYPE))
+# searching by TORNADO
+toMatch <- c("TORNADO")
+
+# get the indices where there are matches
+indices <- grep(paste(toMatch, collapse="|"), sub_data_health$EVTYPE)
+
+# replacement matches with TORNADO
+sub_data_health$EVTYPE[indices] = "TORNADO"
+
 ```
 
-In the official documentation, [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf), we can read that there are 48 event types (chapter 7, points from 7.1 to 7.48), and we have `r length(levels(sub_data$EVTYPE))` event types in our dataset. We need to transform and reduce them.
+We are going to do the above same process with others event types. For this purpouse, we are going to create a function to do this.
 
-In first place, we need to know how many ocurrences of each event type.
+```{r echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE}
+
+
+toMatch <-c("TORNADO"), "TORNADO")
+toMatch <-c("THUNDERST", "WIND", "TSTM"), "THUNDERSTORM WIND")
+toMatch <-c("HURRICANE", "TYPHOON", "TROPICAL"), "HURRICANE/TYPHOON")
+toMatch <-c("FLOOD"), "FLOOD")
+toMatch <-c("SNOW"), "SNOW")
+toMatch <-c("RAIN"), "RAIN")
+toMatch <-c("COLD","HYPOTHERMIA/EXPOSURE", "LOW TEMPERATURE", "FREEZE", 
+            "FREEZING SPRAY"), "COLD")
+toMatch <-c("LIGHTNING"), "LIGHTNING")
+toMatch <-c("FOG"), "FOG")
+toMatch <-c("WATER"), "WATERSPOUT")
+toMatch <-c("COASTAL"), "COASTAL FLOOD")
+toMatch <-c("ICE", "SMALL HAIL"), "ICE")
+toMatch <-c("HOT", "WARM", "HEAT"), "HEAT")
+toMatch <-c("DROUGHT", "DROWNING"), "DROUGHT")
+
+```
+
+
+At this point, we are going to check the more harmful event types in our datasets.
 
 ```{r echo=TRUE, cache=TRUE}
-summary(sub_data$EVTYPE)
+
+# Group by event type
+my_health_group <- group_by(sub_data_health, EVTYPE)
+
+# Get the sum of injuries and fatalities by event type
+my_health_summary <- summarise(my_health_group, sum(FATALITIES), sum(INJURIES))
+
+# change tne column names
+colnames(my_health_summary) <- c("EVTYPE", "SUM_FATALITIES", "SUM_INJURIES")
+
+# Order the dataset by number of FATALITIES & INJURIES
+my_health_summary <- arrange(my_health_summary, desc(SUM_FATALITIES, SUM_INJURIES))
+
+# Preview
+head(my_health_summary)
+
 ```
 
-In this summary, we can see that THUNDERSTORM WIND and other variations of the same climatic event are the more common (TSTM WIND, THUNDERSTORM WINDS, THUNDERSTORM WINDSS, THUNDERSTORM, TSTM WIND (G45), THUNDERSTORM WINDS/HAIL, WINDS, GUSTY WINDS). The idea is to group these events in one big group with name **THUNDERSTORM WIND**, like this event is named in the official documentation.
+Now we have `r length(levels(my_health_summary$EVTYPE))` different event types in our *my_health_summary* dataset. 
 
 
 levels(as.factor(grep("*Thunderst*", sub_data$EVTYPE, ignore.case = T, value = T)))
