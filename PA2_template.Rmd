@@ -163,21 +163,21 @@ We are going to do the above same process with others event types. For this purp
 ```{r echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE}
 
 
-toMatch <-c("TORNADO"), "TORNADO")
-toMatch <-c("THUNDERST", "WIND", "TSTM"), "THUNDERSTORM WIND")
-toMatch <-c("HURRICANE", "TYPHOON", "TROPICAL"), "HURRICANE/TYPHOON")
-toMatch <-c("FLOOD"), "FLOOD")
-toMatch <-c("SNOW"), "SNOW")
-toMatch <-c("RAIN"), "RAIN")
+toMatch <-c("TORNADO", "TORNADO")
+toMatch <-c("THUNDERST", "WIND", "TSTM", "THUNDERSTORM WIND")
+toMatch <-c("HURRICANE", "TYPHOON", "TROPICAL", "HURRICANE/TYPHOON")
+toMatch <-c("FLOOD", "FLOOD")
+toMatch <-c("SNOW", "SNOW")
+toMatch <-c("RAIN", "RAIN")
 toMatch <-c("COLD","HYPOTHERMIA/EXPOSURE", "LOW TEMPERATURE", "FREEZE", 
-            "FREEZING SPRAY"), "COLD")
-toMatch <-c("LIGHTNING"), "LIGHTNING")
-toMatch <-c("FOG"), "FOG")
-toMatch <-c("WATER"), "WATERSPOUT")
-toMatch <-c("COASTAL"), "COASTAL FLOOD")
-toMatch <-c("ICE", "SMALL HAIL"), "ICE")
-toMatch <-c("HOT", "WARM", "HEAT"), "HEAT")
-toMatch <-c("DROUGHT", "DROWNING"), "DROUGHT")
+            "FREEZING SPRAY", "COLD")
+toMatch <-c("LIGHTNING", "LIGHTNING")
+toMatch <-c("FOG", "FOG")
+toMatch <-c("WATER", "WATERSPOUT")
+toMatch <-c("COASTAL", "COASTAL FLOOD")
+toMatch <-c("ICE", "SMALL HAIL", "ICE")
+toMatch <-c("HOT", "WARM", "HEAT", "HEAT")
+toMatch <-c("DROUGHT", "DROWNING", "DROUGHT")
 
 ```
 

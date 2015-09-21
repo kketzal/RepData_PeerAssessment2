@@ -64,20 +64,45 @@ img {
 </div>
 
 
-<hr />
+<div id="title" class="section level1">
+<h1><strong>Title</strong></h1>
+<div id="types-of-weather-events-that-are-most-harmful-with-respect-to-population-health-and-with-respect-to-economic-consequences" class="section level2">
+<h2>Types of weather events that are most harmful with respect to population health and with respect to economic consequences</h2>
+</div>
+</div>
+<div id="synopsis" class="section level1">
+<h1><strong>Synopsis</strong></h1>
+</div>
+<div id="data-processing" class="section level1">
+<h1><strong>Data Processing</strong></h1>
 <div id="loading-and-preprocessing-the-data" class="section level2">
-<h2><strong>Loading and preprocessing the data</strong></h2>
-<div id="unzipping-activity.zip-file-and-reading-the-csv-file" class="section level3">
-<h3>1. Unzipping “activity.zip” file and reading the CSV file</h3>
-<pre class="r"><code>fileName &lt;- &quot;repdata%2Fdata%2FStormData.csv.bz2&quot;
-URL &lt;- &quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2&quot;
+<h2>Loading and preprocessing the data</h2>
+<div id="downloadingloading-storm-data-file-and-reading-the-csv-file" class="section level3">
+<h3>1. Downloading/loading “Storm Data” file and reading the CSV file</h3>
+<pre class="r"><code># suppressPackageStartupMessages(library(data.table))
+
+## I need to change my LOCALE (spanish) to English...
+Sys.setlocale('LC_TIME', 'en_US.UTF-8')</code></pre>
+<pre><code>## [1] &quot;en_US.UTF-8&quot;</code></pre>
+<pre class="r"><code>compressedFileName &lt;- &quot;repdata_data_StormData.csv.bz2&quot;
+
+URL &lt;- &quot;https://d396qusza40orc.cloudfront.net/repdata_data_StormData.csv.bz2&quot;
 
 # If file doesn't exist in current working directory, I try to download from website
-if(!file.exists(fileName))
-    download.file(URL, fileName, method = &quot;curl&quot;)
+if(!file.exists(compressedFileName))
+    download.file(URL, compressedFileName, method = &quot;curl&quot;)
 
-data &lt;- read.csv(fileName)
-head(data)</code></pre>
+# If the file doesn't exist in current working directory after downloading, there are any
+# problem downloading this file, or there are any other problem...aborting
+if(!file.exists(compressedFileName))    
+    stop(&quot;Required file doesn't exist in the current working directory! Aborting...&quot;)
+    
+# loading data
+data &lt;- read.csv(compressedFileName)
+
+# Get the column names and check if they are properly formatted
+colnames(data) &lt;- make.names(colnames(data))</code></pre>
+<pre class="r"><code>head(data)</code></pre>
 <pre><code>##   STATE__           BGN_DATE BGN_TIME TIME_ZONE COUNTY COUNTYNAME STATE
 ## 1       1  4/18/1950 0:00:00     0130       CST     97     MOBILE    AL
 ## 2       1  4/18/1950 0:00:00     0145       CST      3    BALDWIN    AL
@@ -113,6 +138,223 @@ head(data)</code></pre>
 ## 4     3458      8626          0          0              4
 ## 5     3412      8642          0          0              5
 ## 6     3450      8748          0          0              6</code></pre>
+</div>
+<div id="storm-data---exploratory-analysis" class="section level3">
+<h3>2. Storm Data - Exploratory analysis</h3>
+<p>There is some documentation of this dataset available <a href="https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf">here</a>. More information can be obtained from the <a href="http://www.ncdc.noaa.gov/stormevents/ftp.jsp">NOAA Storm Events Database</a>.</p>
+<p>There are <strong>902297 rows</strong> or observations and <strong>37 columns</strong> or variables in this dataset.</p>
+<p>Reading these two websites above and, for the topic of this paper, we can subset the <em>data</em> CSV file extracting only the following columns or variables:</p>
+<ul>
+<li>BGN_DATE (event start date)</li>
+<li>STATE (the USA state where event occurs)</li>
+<li>EVTYPE (climatic event)</li>
+<li>FATALITIES (numerical value for an occurrence of death)</li>
+<li>INJURIES (numerical value for non fatal damage, hurt, harm, …)</li>
+<li>PROPDMG (numerical value for property damage)</li>
+<li>PROPDMGEXP (value for adjusting PROPDMG value)</li>
+<li>CROPDMG (numerical value for crop damage)</li>
+<li>CROPDMGEXP (value for adjusting CROPDMG value)</li>
+</ul>
+<p>The others columns or variables aren’t important for the analysis in this article.</p>
+<p>Now, we are going to subset the dataset.</p>
+<pre class="r"><code>suppressPackageStartupMessages(library(dplyr))
+
+# select only the variables we are interested in
+sub_data &lt;- data %&gt;% select(BGN_DATE, STATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP,CROPDMG, CROPDMGEXP)
+
+# For saving computer resources, we can remove the initial dataset
+rm(data)
+
+# now, we have a smaller dataset
+head(sub_data)</code></pre>
+<pre><code>##             BGN_DATE STATE  EVTYPE FATALITIES INJURIES PROPDMG PROPDMGEXP
+## 1  4/18/1950 0:00:00    AL TORNADO          0       15    25.0          K
+## 2  4/18/1950 0:00:00    AL TORNADO          0        0     2.5          K
+## 3  2/20/1951 0:00:00    AL TORNADO          0        2    25.0          K
+## 4   6/8/1951 0:00:00    AL TORNADO          0        2     2.5          K
+## 5 11/15/1951 0:00:00    AL TORNADO          0        2     2.5          K
+## 6 11/15/1951 0:00:00    AL TORNADO          0        6     2.5          K
+##   CROPDMG CROPDMGEXP
+## 1       0           
+## 2       0           
+## 3       0           
+## 4       0           
+## 5       0           
+## 6       0</code></pre>
+<p>For this analysis we want to study types of weather events that are most harmful with respect to population health and with respect to economic consequences, so we want dataset observations with values over “0” (zero) in the following variables: FATALITIES, INJURIES, PROPDMG and CROPDMG.</p>
+<pre class="r"><code>sub_data &lt;- sub_data %&gt;% filter(FATALITIES &gt; 0 | INJURIES &gt; 0 | PROPDMG &gt; 0 | CROPDMG &gt; 0)</code></pre>
+<p>Now, there are <strong>254633 rows</strong> or observations and <strong>9 columns</strong> or variables in <em>sub_data</em> dataset. We have reduced the data size significantly.</p>
+<pre class="r"><code>#summary of our dataset
+summary(sub_data)</code></pre>
+<pre><code>##               BGN_DATE          STATE                      EVTYPE     
+##  4/27/2011 0:00:00:   761   TX     : 22144   TSTM WIND        :63234  
+##  4/4/2011 0:00:00 :   649   IA     : 16093   THUNDERSTORM WIND:43655  
+##  6/21/2011 0:00:00:   511   OH     : 13337   TORNADO          :39944  
+##  5/31/1998 0:00:00:   504   MS     : 12023   HAIL             :26130  
+##  6/4/2008 0:00:00 :   486   GA     : 11207   FLASH FLOOD      :20967  
+##  5/25/2011 0:00:00:   440   AL     : 11121   LIGHTNING        :13293  
+##  (Other)          :251282   (Other):168708   (Other)          :47410  
+##    FATALITIES          INJURIES            PROPDMG          PROPDMGEXP    
+##  Min.   :  0.0000   Min.   :   0.0000   Min.   :   0.00   K      :231428  
+##  1st Qu.:  0.0000   1st Qu.:   0.0000   1st Qu.:   2.00          : 11585  
+##  Median :  0.0000   Median :   0.0000   Median :   5.00   M      : 11320  
+##  Mean   :  0.0595   Mean   :   0.5519   Mean   :  42.75   0      :   210  
+##  3rd Qu.:  0.0000   3rd Qu.:   0.0000   3rd Qu.:  25.00   B      :    40  
+##  Max.   :583.0000   Max.   :1700.0000   Max.   :5000.00   5      :    18  
+##                                                           (Other):    32  
+##     CROPDMG          CROPDMGEXP    
+##  Min.   :  0.000          :152664  
+##  1st Qu.:  0.000   K      : 99932  
+##  Median :  0.000   M      :  1985  
+##  Mean   :  5.411   k      :    21  
+##  3rd Qu.:  0.000   0      :    17  
+##  Max.   :990.000   B      :     7  
+##                    (Other):     7</code></pre>
+</div>
+<div id="storm-data---cleaning-the-data" class="section level3">
+<h3>3. Storm Data - Cleaning the Data</h3>
+<p>In the official documentation, <a href="https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf">here</a>, we can read that there are 48 event types (chapter 7, points from 7.1 to 7.48), and we have 985 event types in our dataset. We’ll need to transform and reduce them.</p>
+<p>In first place, we are going to know how many ocurrences of each event type there are in our <em>sub_data</em> dataset.</p>
+<pre class="r"><code>summary(sub_data$EVTYPE)</code></pre>
+<pre><code>##                TSTM WIND        THUNDERSTORM WIND                  TORNADO 
+##                    63234                    43655                    39944 
+##                     HAIL              FLASH FLOOD                LIGHTNING 
+##                    26130                    20967                    13293 
+##       THUNDERSTORM WINDS                    FLOOD                HIGH WIND 
+##                    12086                    10175                     5522 
+##              STRONG WIND             WINTER STORM               HEAVY SNOW 
+##                     3370                     1508                     1342 
+##               HEAVY RAIN                 WILDFIRE                ICE STORM 
+##                     1105                      857                      708 
+##     URBAN/SML STREAM FLD           EXCESSIVE HEAT               HIGH WINDS 
+##                      702                      698                      657 
+##           TSTM WIND/HAIL           TROPICAL STORM           WINTER WEATHER 
+##                      441                      416                      407 
+##              RIP CURRENT         WILD/FOREST FIRE           FLASH FLOODING 
+##                      400                      388                      302 
+##        FLOOD/FLASH FLOOD                AVALANCHE                  DROUGHT 
+##                      279                      268                      266 
+##                 BLIZZARD             RIP CURRENTS                     HEAT 
+##                      253                      241                      215 
+##             EXTREME COLD         LAKE-EFFECT SNOW                LANDSLIDE 
+##                      197                      194                      193 
+##              STORM SURGE            COASTAL FLOOD              URBAN FLOOD 
+##                      177                      164                      139 
+##       WINTER WEATHER/MIX                HIGH SURF                HURRICANE 
+##                      139                      130                      129 
+##               LIGHT SNOW             FROST/FREEZE  EXTREME COLD/WIND CHILL 
+##                      119                      116                      111 
+##         MARINE TSTM WIND                      FOG              RIVER FLOOD 
+##                      109                      107                      107 
+##               DUST STORM          COLD/WIND CHILL               DUST DEVIL 
+##                      103                       90                       89 
+##                     WIND           URBAN FLOODING           DRY MICROBURST 
+##                       83                       80                       78 
+##                DENSE FOG        HURRICANE/TYPHOON                 FLOODING 
+##                       74                       72                       58 
+##         COASTAL FLOODING                     SNOW     HEAVY SURF/HIGH SURF 
+##                       55                       52                       50 
+##             STRONG WINDS         STORM SURGE/TIDE               WATERSPOUT 
+##                       50                       47                       47 
+##       MARINE STRONG WIND  THUNDERSTORM WINDS HAIL          TSTM WIND (G45) 
+##                       46                       40                       36 
+##            FREEZING RAIN      TROPICAL DEPRESSION                HEAT WAVE 
+##                       35                       35                       34 
+##      THUNDERSTORM WINDSS MARINE THUNDERSTORM WIND                    OTHER 
+##                       34                       33                       33 
+##                     COLD               HEAVY SURF           EXCESSIVE SNOW 
+##                       32                       30                       25 
+##                      ICE                ICY ROADS      LIGHT FREEZING RAIN 
+##                       24                       22                       22 
+##  THUNDERSTORM WINDS/HAIL              GUSTY WINDS       HEAVY SNOW SQUALLS 
+##                       22                       21                       21 
+##               Light Snow              HEAVY RAINS        EXTREME WINDCHILL 
+##                       21                       20                       19 
+##                    GLAZE         MARINE HIGH WIND             THUNDERSTORM 
+##                       19                       19                       19 
+##                    WINDS             EXTREME HEAT        FLASH FLOOD/FLOOD 
+##                       18                       17                       16 
+##                   FREEZE              SNOW SQUALL       HEAVY SNOW-SQUALLS 
+##                       16                       16                       15 
+##      MIXED PRECIPITATION                  TSUNAMI             FLASH FLOODS 
+##                       15                       14                       13 
+##             FUNNEL CLOUD               GUSTY WIND           RIVER FLOODING 
+##                       13                       13                       13 
+##               SMALL HAIL   DROUGHT/EXCESSIVE HEAT              Gusty Winds 
+##                       11                       10                       10 
+##                  (Other) 
+##                      773</code></pre>
+<p>In this summary, we can see that THUNDERSTORM WIND and other variations of the same climatic event are the more common (TSTM WIND, THUNDERSTORM WINDS, THUNDERSTORM WINDSS, THUNDERSTORM, TSTM WIND (G45), THUNDERSTORM WINDS/HAIL, WINDS, GUSTY WINDS). The idea is to group these events in one big group with name <strong>THUNDERSTORM WIND</strong>, like this event is named in the official documentation. We’ll do the same process for others climatic events with similar variable name in our dataset. This way we reduce the dataset dimensions.</p>
+<p>Also, there are duplicate event names, and the same event name in lowercase and in uppercase, so we’ll transform all event names to uppercase, for grouping purpouses.</p>
+<pre class="r"><code># Transform all event names to UPPERCASE. This transform the column &quot;as.character&quot;.
+sub_data &lt;- mutate(sub_data, EVTYPE = as.factor(toupper(EVTYPE)))</code></pre>
+<p>Now, we have two different questions to resolve:</p>
+<blockquote>
+<ol style="list-style-type: decimal">
+<li>Weather events that are most harmful with respect to population health</li>
+<li>Weather events that are most harmful with respect to economic consequences</li>
+</ol>
+</blockquote>
+<p>The climatic events that affect the first question may not be the same that affect the second question and vice versa.</p>
+<p>For this purpouse, we need to extract these differents observations from the <em>sub_data</em> dataset. One dataset for population health, and another dataset for economic consequences.</p>
+<pre class="r"><code>sub_data_health &lt;- sub_data %&gt;% filter(FATALITIES &gt; 0 | INJURIES &gt; 0)
+sub_data_economic &lt;- sub_data %&gt;% filter(PROPDMG &gt; 0 | CROPDMG &gt; 0)
+
+# For saving computer resources, we can remove the initial dataset
+rm(sub_data)</code></pre>
+<p>Now, there are <strong>21929 rows</strong> or observations and <strong>9 columns</strong> or variables in <em>sub_data_health</em> dataset, and <strong>245031 rows</strong> or observations and <strong>9 columns</strong> or variables in <em>sub_data_economic</em> dataset.</p>
+<p>We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. We start looking for and replacing the more harmful climatic events like TORNADO, HURRICANES, …</p>
+<pre class="r"><code># searching by TORNADO
+toMatch &lt;- c(&quot;TORNADO&quot;)
+
+# get the indices where there are matches
+indices &lt;- grep(paste(toMatch, collapse=&quot;|&quot;), sub_data_health$EVTYPE)
+
+# replacement matches with TORNADO
+sub_data_health$EVTYPE[indices] = &quot;TORNADO&quot;</code></pre>
+<p>We are going to do the above same process with others event types. For this purpouse, we are going to create a function to do this.</p>
+<pre class="r"><code>toMatch &lt;-c(&quot;TORNADO&quot;, &quot;TORNADO&quot;)
+toMatch &lt;-c(&quot;THUNDERST&quot;, &quot;WIND&quot;, &quot;TSTM&quot;, &quot;THUNDERSTORM WIND&quot;)
+toMatch &lt;-c(&quot;HURRICANE&quot;, &quot;TYPHOON&quot;, &quot;TROPICAL&quot;, &quot;HURRICANE/TYPHOON&quot;)
+toMatch &lt;-c(&quot;FLOOD&quot;, &quot;FLOOD&quot;)
+toMatch &lt;-c(&quot;SNOW&quot;, &quot;SNOW&quot;)
+toMatch &lt;-c(&quot;RAIN&quot;, &quot;RAIN&quot;)
+toMatch &lt;-c(&quot;COLD&quot;,&quot;HYPOTHERMIA/EXPOSURE&quot;, &quot;LOW TEMPERATURE&quot;, &quot;FREEZE&quot;, 
+            &quot;FREEZING SPRAY&quot;, &quot;COLD&quot;)
+toMatch &lt;-c(&quot;LIGHTNING&quot;, &quot;LIGHTNING&quot;)
+toMatch &lt;-c(&quot;FOG&quot;, &quot;FOG&quot;)
+toMatch &lt;-c(&quot;WATER&quot;, &quot;WATERSPOUT&quot;)
+toMatch &lt;-c(&quot;COASTAL&quot;, &quot;COASTAL FLOOD&quot;)
+toMatch &lt;-c(&quot;ICE&quot;, &quot;SMALL HAIL&quot;, &quot;ICE&quot;)
+toMatch &lt;-c(&quot;HOT&quot;, &quot;WARM&quot;, &quot;HEAT&quot;, &quot;HEAT&quot;)
+toMatch &lt;-c(&quot;DROUGHT&quot;, &quot;DROWNING&quot;, &quot;DROUGHT&quot;)</code></pre>
+<p>At this point, we are going to check the more harmful event types in our datasets.</p>
+<pre class="r"><code># Group by event type
+my_health_group &lt;- group_by(sub_data_health, EVTYPE)
+
+# Get the sum of injuries and fatalities by event type
+my_health_summary &lt;- summarise(my_health_group, sum(FATALITIES), sum(INJURIES))
+
+# change tne column names
+colnames(my_health_summary) &lt;- c(&quot;EVTYPE&quot;, &quot;SUM_FATALITIES&quot;, &quot;SUM_INJURIES&quot;)
+
+# Order the dataset by number of FATALITIES &amp; INJURIES
+my_health_summary &lt;- arrange(my_health_summary, desc(SUM_FATALITIES, SUM_INJURIES))
+
+# Preview
+head(my_health_summary)</code></pre>
+<pre><code>## Source: local data frame [6 x 3]
+## 
+##           EVTYPE SUM_FATALITIES SUM_INJURIES
+## 1        TORNADO           5661        91407
+## 2 EXCESSIVE HEAT           1903         6525
+## 3    FLASH FLOOD            978         1777
+## 4           HEAT            937         2100
+## 5      LIGHTNING            816         5230
+## 6      TSTM WIND            504         6957</code></pre>
+<p>Now we have 447 different event types in our <em>my_health_summary</em> dataset.</p>
+<p>levels(as.factor(grep(“<em>Thunderst</em>”, sub_data$EVTYPE, ignore.case = T, value = T))) my_group &lt;- group_by(sub_data,EVTYPE, INJURIES, FATALITIES, PROPDMG, CROPDMG) summarise_each(my_group, funs(sum))</p>
+</div>
 </div>
 </div>
 
