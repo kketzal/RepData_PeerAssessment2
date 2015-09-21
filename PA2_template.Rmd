@@ -26,13 +26,14 @@ output:
 ## I need to change my LOCALE (spanish) to English...
 Sys.setlocale('LC_TIME', 'en_US.UTF-8')
 
-compressedFileName <- "repdata_data_StormData.csv.bz2"
+compressedFileName <- "repdata%2Fdata_StormData.csv.bz2"
 
-URL <- "https://d396qusza40orc.cloudfront.net/repdata_data_StormData.csv.bz2"
+URL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+
 
 # If file doesn't exist in current working directory, I try to download from website
 if(!file.exists(compressedFileName))
-    download.file(URL, compressedFileName, method = "curl")
+    download.file(URL, compressedFileName)
 
 # If the file doesn't exist in current working directory after downloading, there are any
 # problem downloading this file, or there are any other problem...aborting
@@ -124,6 +125,47 @@ Also, there are duplicate event names, and the same event name in lowercase and 
 sub_data <- mutate(sub_data, EVTYPE = as.factor(toupper(EVTYPE)))
 
 ```
+
+
+We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. We start looking for and replacing the more harmful climatic events like TORNADO, HURRICANES, ...
+
+```{r echo=TRUE, cache=TRUE}
+# searching by TORNADO
+toMatch <- c("TORNADO")
+
+# get the indices where there are matches
+indices <- grep(paste(toMatch, collapse="|"), sub_data_health$EVTYPE)
+
+# replacement matches with TORNADO
+sub_data_health$EVTYPE[indices] = "TORNADO"
+
+```
+
+We are going to do the above same process with others event types. For this purpouse, we are going to create a function to do this.
+
+```{r echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE}
+
+
+toMatch <-c("TORNADO", "TORNADO")
+toMatch <-c("THUNDERST", "WIND", "TSTM", "THUNDERSTORM WIND")
+toMatch <-c("HURRICANE", "TYPHOON", "TROPICAL", "HURRICANE/TYPHOON")
+toMatch <-c("FLOOD", "FLOOD")
+toMatch <-c("SNOW", "SNOW")
+toMatch <-c("RAIN", "RAIN")
+toMatch <-c("COLD","HYPOTHERMIA/EXPOSURE", "LOW TEMPERATURE", "FREEZE", 
+            "FREEZING SPRAY", "COLD")
+toMatch <-c("LIGHTNING", "LIGHTNING")
+toMatch <-c("FOG", "FOG")
+toMatch <-c("WATER", "WATERSPOUT")
+toMatch <-c("COASTAL", "COASTAL FLOOD")
+toMatch <-c("ICE", "SMALL HAIL", "ICE")
+toMatch <-c("HOT", "WARM", "HEAT", "HEAT")
+toMatch <-c("DROUGHT", "DROWNING", "DROUGHT")
+
+```
+
+
+
 
 Now, we have two different questions to resolve:
 
