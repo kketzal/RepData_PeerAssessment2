@@ -107,7 +107,7 @@ summary(sub_data)
 
 ### 3. Storm Data - Cleaning the Data
 
-In the official documentation, [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf), we can read that there are 48 event types (chapter 7, points from 7.1 to 7.48), and we have `r length(levels(sub_data$EVTYPE))` event types in our dataset. We'll need to transform and reduce them.
+In the official documentation, [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf), we can read that there are 48 event types (chapter 7, points from 7.1 to 7.48, or the Storm Data Event Table in the page 6 of the above PDF document), and we have `r length(levels(sub_data$EVTYPE))` event types in our dataset. We'll need to transform and reduce them. 
 
 In first place, we are going to know how many ocurrences of each event type there are in our *sub_data* dataset.
 
@@ -130,26 +130,55 @@ sub_data <- mutate(sub_data, EVTYPE = as.factor(toupper(EVTYPE)))
 We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. We start looking for and replacing the more harmful climatic events like TORNADO, HURRICANES, ...
 
 ```{r echo=TRUE, cache=TRUE}
+
+groupingFactorLevels <- function(mydata, keyName, arrayNames) 
+{
 # searching by TORNADO
-toMatch <- c("TORNADO")
+toMatch <- arrayNames
 
 # get the indices where there are matches
-indices <- grep(paste(toMatch, collapse="|"), sub_data_health$EVTYPE)
+indices <- grep(paste(toMatch, collapse="|"), levels(mydata$EVTYPE))
+
 
 # replacement matches with TORNADO
-sub_data_health$EVTYPE[indices] = "TORNADO"
+levels(mydata$EVTYPE)[c(indices)] <- keyName
+
+return(mydata)
+
+}
 
 ```
+
+
+
+
 
 We are going to do the above same process with others event types. For this purpouse, we are going to create a function to do this.
 
 ```{r echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE}
 
+ toMatch <-c("TORNADO", "TORNADOES")
+ sub_data <- groupingFactorLevels(sub_data, c("TORNADO"), toMatch)
 
-toMatch <-c("TORNADO", "TORNADO")
-toMatch <-c("THUNDERST", "WIND", "TSTM", "THUNDERSTORM WIND")
-toMatch <-c("HURRICANE", "TYPHOON", "TROPICAL", "HURRICANE/TYPHOON")
-toMatch <-c("FLOOD", "FLOOD")
+ toMatch <-c("THUNDERST", "WIND", "TSTM", "THUNDERSTORM WIND")
+sub_data <- groupingFactorLevels(sub_data, c("THUNDERSTORM WIND"), toMatch)
+
+toMatch <-c("HURRICANE", "TYPHOON", "HURRICANE/TYPHOON")
+sub_data <- groupingFactorLevels(sub_data, c("HURRICANE/TYPHOON"), toMatch)
+
+toMatch <-c("RIVER FLOOD", "URBAN/SMALL STREAM FLOOD", "URBAN FLOODING", "URBAN FLOOD")
+sub_data <- groupingFactorLevels(sub_data, c("FLOOD"), toMatch)
+
+toMatch <-c("FLASH FLOOD", "FLASH FLOODING", "FLOODING", "FLASH FLOODS")
+sub_data <- groupingFactorLevels(sub_data, c("FLASH FLOOD"), toMatch)
+
+toMatch <-c("LIGHT FREEZING RAIN", "FREEZE", "FREEZING RAIN", "FROST/FREEZE", 
+           "AGRICULTURAL FREEZE", "FREEZING RAIN/SNOW", "DAMAGING FREEZE", "FREEZING DRIZZLE", 
+           "FROST", "SNOW FREEZING RAIN")
+sub_data <- groupingFactorLevels(sub_data, c("FROST/FREEZE"), toMatch)
+
+summary(sub_data$EVTYPE)
+
 toMatch <-c("SNOW", "SNOW")
 toMatch <-c("RAIN", "RAIN")
 toMatch <-c("COLD","HYPOTHERMIA/EXPOSURE", "LOW TEMPERATURE", "FREEZE", 
