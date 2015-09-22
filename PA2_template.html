@@ -84,13 +84,14 @@ img {
 ## I need to change my LOCALE (spanish) to English...
 Sys.setlocale('LC_TIME', 'en_US.UTF-8')</code></pre>
 <pre><code>## [1] &quot;en_US.UTF-8&quot;</code></pre>
-<pre class="r"><code>compressedFileName &lt;- &quot;repdata_data_StormData.csv.bz2&quot;
+<pre class="r"><code>compressedFileName &lt;- &quot;repdata%2Fdata_StormData.csv.bz2&quot;
 
-URL &lt;- &quot;https://d396qusza40orc.cloudfront.net/repdata_data_StormData.csv.bz2&quot;
+URL &lt;- &quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2&quot;
+
 
 # If file doesn't exist in current working directory, I try to download from website
 if(!file.exists(compressedFileName))
-    download.file(URL, compressedFileName, method = &quot;curl&quot;)
+    download.file(URL, compressedFileName)
 
 # If the file doesn't exist in current working directory after downloading, there are any
 # problem downloading this file, or there are any other problem...aborting
@@ -213,7 +214,7 @@ summary(sub_data)</code></pre>
 </div>
 <div id="storm-data---cleaning-the-data" class="section level3">
 <h3>3. Storm Data - Cleaning the Data</h3>
-<p>In the official documentation, <a href="https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf">here</a>, we can read that there are 48 event types (chapter 7, points from 7.1 to 7.48), and we have 985 event types in our dataset. We’ll need to transform and reduce them.</p>
+<p>In the official documentation, <a href="https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf">here</a>, we can read that there are 48 event types (chapter 7, points from 7.1 to 7.48, or the Storm Data Event Table in the page 6 of the above PDF document), and we have 985 event types in our dataset. We’ll need to transform and reduce them.</p>
 <p>In first place, we are going to know how many ocurrences of each event type there are in our <em>sub_data</em> dataset.</p>
 <pre class="r"><code>summary(sub_data$EVTYPE)</code></pre>
 <pre><code>##                TSTM WIND        THUNDERSTORM WIND                  TORNADO 
@@ -288,6 +289,123 @@ summary(sub_data)</code></pre>
 <p>Also, there are duplicate event names, and the same event name in lowercase and in uppercase, so we’ll transform all event names to uppercase, for grouping purpouses.</p>
 <pre class="r"><code># Transform all event names to UPPERCASE. This transform the column &quot;as.character&quot;.
 sub_data &lt;- mutate(sub_data, EVTYPE = as.factor(toupper(EVTYPE)))</code></pre>
+<p>We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. We start looking for and replacing the more harmful climatic events like TORNADO, HURRICANES, …</p>
+<pre class="r"><code>groupingFactorLevels &lt;- function(mydata, keyName, arrayNames) 
+{
+# searching by TORNADO
+toMatch &lt;- arrayNames
+
+# get the indices where there are matches
+indices &lt;- grep(paste(toMatch, collapse=&quot;|&quot;), levels(mydata$EVTYPE))
+
+
+# replacement matches with TORNADO
+levels(mydata$EVTYPE)[c(indices)] &lt;- keyName
+
+return(mydata)
+
+}</code></pre>
+<p>We are going to do the above same process with others event types. For this purpouse, we are going to create a function to do this.</p>
+<pre class="r"><code> toMatch &lt;-c(&quot;TORNADO&quot;, &quot;TORNADOES&quot;)
+ sub_data &lt;- groupingFactorLevels(sub_data, c(&quot;TORNADO&quot;), toMatch)
+
+ toMatch &lt;-c(&quot;THUNDERST&quot;, &quot;WIND&quot;, &quot;TSTM&quot;, &quot;THUNDERSTORM WIND&quot;)
+sub_data &lt;- groupingFactorLevels(sub_data, c(&quot;THUNDERSTORM WIND&quot;), toMatch)
+
+toMatch &lt;-c(&quot;HURRICANE&quot;, &quot;TYPHOON&quot;, &quot;HURRICANE/TYPHOON&quot;)
+sub_data &lt;- groupingFactorLevels(sub_data, c(&quot;HURRICANE/TYPHOON&quot;), toMatch)
+
+toMatch &lt;-c(&quot;RIVER FLOOD&quot;, &quot;URBAN/SMALL STREAM FLOOD&quot;, &quot;URBAN FLOODING&quot;, &quot;URBAN FLOOD&quot;)
+sub_data &lt;- groupingFactorLevels(sub_data, c(&quot;FLOOD&quot;), toMatch)
+
+toMatch &lt;-c(&quot;FLASH FLOOD&quot;, &quot;FLASH FLOODING&quot;, &quot;FLOODING&quot;, &quot;FLASH FLOODS&quot;)
+sub_data &lt;- groupingFactorLevels(sub_data, c(&quot;FLASH FLOOD&quot;), toMatch)
+
+toMatch &lt;-c(&quot;LIGHT FREEZING RAIN&quot;, &quot;FREEZE&quot;, &quot;FREEZING RAIN&quot;, &quot;FROST/FREEZE&quot;, 
+           &quot;AGRICULTURAL FREEZE&quot;, &quot;FREEZING RAIN/SNOW&quot;, &quot;DAMAGING FREEZE&quot;, &quot;FREEZING DRIZZLE&quot;, 
+           &quot;FROST&quot;, &quot;SNOW FREEZING RAIN&quot;)
+sub_data &lt;- groupingFactorLevels(sub_data, c(&quot;FROST/FREEZE&quot;), toMatch)
+
+summary(sub_data$EVTYPE)</code></pre>
+<pre><code>##      THUNDERSTORM WIND                TORNADO                   HAIL 
+##                 129930                  39970                  26130 
+##            FLASH FLOOD              LIGHTNING                  FLOOD 
+##                  21746                  13293                  10532 
+##           WINTER STORM             HEAVY SNOW             HEAVY RAIN 
+##                   1508                   1342                   1105 
+##               WILDFIRE              ICE STORM   URBAN/SML STREAM FLD 
+##                    857                    708                    702 
+##         EXCESSIVE HEAT         TROPICAL STORM         WINTER WEATHER 
+##                    698                    416                    407 
+##            RIP CURRENT       WILD/FOREST FIRE              AVALANCHE 
+##                    400                    388                    268 
+##                DROUGHT               BLIZZARD           RIP CURRENTS 
+##                    266                    253                    241 
+##           FROST/FREEZE      HURRICANE/TYPHOON                   HEAT 
+##                    240                    232                    215 
+##           EXTREME COLD       LAKE-EFFECT SNOW              LANDSLIDE 
+##                    199                    194                    193 
+##            STORM SURGE          COASTAL FLOOD             LIGHT SNOW 
+##                    177                    168                    141 
+##     WINTER WEATHER/MIX              HIGH SURF                    FOG 
+##                    139                    136                    107 
+##             DUST STORM             DUST DEVIL         DRY MICROBURST 
+##                    103                     95                     78 
+##              DENSE FOG                   SNOW   HEAVY SURF/HIGH SURF 
+##                     74                     54                     50 
+##       STORM SURGE/TIDE             WATERSPOUT                   COLD 
+##                     47                     47                     38 
+##              HEAT WAVE    TROPICAL DEPRESSION                  OTHER 
+##                     35                     35                     34 
+##             HEAVY SURF         EXCESSIVE SNOW                    ICE 
+##                     32                     25                     24 
+##              ICY ROADS                  GLAZE     HEAVY SNOW SQUALLS 
+##                     22                     21                     21 
+##            HEAVY RAINS    MIXED PRECIPITATION           EXTREME HEAT 
+##                     20                     18                     17 
+##            SNOW SQUALL     HEAVY SNOW-SQUALLS                TSUNAMI 
+##                     16                     15                     14 
+##           FUNNEL CLOUD           SNOW SQUALLS             SMALL HAIL 
+##                     13                     12                     11 
+## DROUGHT/EXCESSIVE HEAT                 SEICHE ASTRONOMICAL HIGH TIDE 
+##                     10                      9                      8 
+##              HEAVY MIX              HIGH SEAS           FREEZING FOG 
+##                      8                      8                      7 
+##        LOW TEMPERATURE      UNSEASONABLY WARM            WATERSPOUT- 
+##                      7                      7                      7 
+##   HYPOTHERMIA/EXPOSURE           MIXED PRECIP               MUDSLIDE 
+##                      6                      6                      6 
+##                   RAIN               GUSTNADO        LAKESHORE FLOOD 
+##                      6                      5                      5 
+##            RECORD COLD             SNOW/SLEET          COASTAL STORM 
+##                      5                      5                      4 
+##           COLD WEATHER             HIGH WATER       LAKE EFFECT SNOW 
+##                      4                      4                      4 
+##             MICROBURST      UNSEASONABLY COLD             WILD FIRES 
+##                      4                      4                      4 
+##             WINTRY MIX             BRUSH FIRE                 FLOODS 
+##                      4                      3                      3 
+##               HAIL 275              HAILSTORM         HEAVY SNOW/ICE 
+##                      3                      3                      3 
+##             LANDSLIDES            MAJOR FLOOD              MUD SLIDE 
+##                      3                      3                      3 
+##             ROUGH SEAS           SNOW AND ICE         WET MICROBURST 
+##                      3                      3                      3 
+##              WILDFIRES  ASTRONOMICAL LOW TIDE           BLOWING SNOW 
+##                      3                      2                      2 
+##                (Other) 
+##                    174</code></pre>
+<pre class="r"><code>toMatch &lt;-c(&quot;SNOW&quot;, &quot;SNOW&quot;)
+toMatch &lt;-c(&quot;RAIN&quot;, &quot;RAIN&quot;)
+toMatch &lt;-c(&quot;COLD&quot;,&quot;HYPOTHERMIA/EXPOSURE&quot;, &quot;LOW TEMPERATURE&quot;, &quot;FREEZE&quot;, 
+            &quot;FREEZING SPRAY&quot;, &quot;COLD&quot;)
+toMatch &lt;-c(&quot;LIGHTNING&quot;, &quot;LIGHTNING&quot;)
+toMatch &lt;-c(&quot;FOG&quot;, &quot;FOG&quot;)
+toMatch &lt;-c(&quot;WATER&quot;, &quot;WATERSPOUT&quot;)
+toMatch &lt;-c(&quot;COASTAL&quot;, &quot;COASTAL FLOOD&quot;)
+toMatch &lt;-c(&quot;ICE&quot;, &quot;SMALL HAIL&quot;, &quot;ICE&quot;)
+toMatch &lt;-c(&quot;HOT&quot;, &quot;WARM&quot;, &quot;HEAT&quot;, &quot;HEAT&quot;)
+toMatch &lt;-c(&quot;DROUGHT&quot;, &quot;DROWNING&quot;, &quot;DROUGHT&quot;)</code></pre>
 <p>Now, we have two different questions to resolve:</p>
 <blockquote>
 <ol style="list-style-type: decimal">
@@ -346,7 +464,8 @@ head(my_health_summary)</code></pre>
 <pre><code>## Source: local data frame [6 x 3]
 ## 
 ##           EVTYPE SUM_FATALITIES SUM_INJURIES
-## 1        TORNADO           5661        91407
+##           (fctr)          (dbl)        (dbl)
+## 1             NA           5661        91407
 ## 2 EXCESSIVE HEAT           1903         6525
 ## 3    FLASH FLOOD            978         1777
 ## 4           HEAT            937         2100
