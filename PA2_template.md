@@ -28,7 +28,7 @@ Sys.setlocale('LC_TIME', 'en_US.UTF-8')
 ```
 
 ```r
-compressedFileName <- "repdata%2Fdata_StormData.csv.bz2"
+compressedFileName <- "repdata_data_StormData.csv.bz2"
 
 URL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
 
@@ -145,7 +145,7 @@ head(sub_data)
 ## 5       0           
 ## 6       0
 ```
-
+At this moment, There are **902297 rows** or observations and **9 columns** or variables in *sub_data* dataset.
 For this analysis we want to study types of weather events that are most harmful with respect to population health and with respect to economic consequences, so we want dataset observations with values over "0" (zero) in the following variables: FATALITIES, INJURIES, PROPDMG and CROPDMG.
 
 
@@ -281,20 +281,20 @@ sub_data <- mutate(sub_data, EVTYPE = as.factor(toupper(EVTYPE)))
 ```
 
 
-We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. We start looking for and replacing the more harmful climatic events like TORNADO, HURRICANES, ...
+We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. For this purpouse, the following "groupingFactorLevels" function replaces the terms passed in the "arrayNames" parameter with the term passed in the "keyName" parameter.
 
 
 ```r
 groupingFactorLevels <- function(mydata, keyName, arrayNames) 
 {
-# searching by TORNADO
+# searching by terms inside arrayNAmes parameter
 toMatch <- arrayNames
 
 # get the indices where there are matches
 indices <- grep(paste(toMatch, collapse="|"), levels(mydata$EVTYPE))
 
 
-# replacement matches with TORNADO
+# replacement matches with keyName parameter
 levels(mydata$EVTYPE)[c(indices)] <- keyName
 
 return(mydata)
@@ -303,23 +303,24 @@ return(mydata)
 ```
 
 
-
-
-
-We are going to do the above same process with others event types. For this purpouse, we are going to create a function to do this.
+We are going to use the above function for grouping the most important climatic events, that is, the most frequent climatic events (as you can see in: summary(sub_data$EVTYPE))
 
 
 ```r
- toMatch <-c("TORNADO", "TORNADOES")
- sub_data <- groupingFactorLevels(sub_data, c("TORNADO"), toMatch)
+toMatch <-c("TORNADO", "TORNADOES")
+sub_data <- groupingFactorLevels(sub_data, c("TORNADO"), toMatch)
 
- toMatch <-c("THUNDERST", "WIND", "TSTM", "THUNDERSTORM WIND")
+toMatch <- c("^THUNDERSTORM", "^TSTM", "^SEVERE THUNDERSTORM", "^THUNDERTORM WINDS", "^TSTM WIND ")
 sub_data <- groupingFactorLevels(sub_data, c("THUNDERSTORM WIND"), toMatch)
+
+toMatch <-c("^MARINE TSTM WIND", "^MARINE THUNDERSTORM WIND" )
+sub_data <- groupingFactorLevels(sub_data, c("MARINE THUNDERSTORM WIND"), toMatch)
 
 toMatch <-c("HURRICANE", "TYPHOON", "HURRICANE/TYPHOON")
 sub_data <- groupingFactorLevels(sub_data, c("HURRICANE/TYPHOON"), toMatch)
 
-toMatch <-c("RIVER FLOOD", "URBAN/SMALL STREAM FLOOD", "URBAN FLOODING", "URBAN FLOOD")
+toMatch <-c("RIVER FLOOD", "URBAN/SMALL STREAM FLOOD", "URBAN FLOODING", "MAJOR FLOOD", 
+            "URBAN FLOOD", "URBAN/SML STREAM FLD", "FLOOD/RAIN/WINDS", "^FLOODS$")
 sub_data <- groupingFactorLevels(sub_data, c("FLOOD"), toMatch)
 
 toMatch <-c("FLASH FLOOD", "FLASH FLOODING", "FLOODING", "FLASH FLOODS")
@@ -330,96 +331,99 @@ toMatch <-c("LIGHT FREEZING RAIN", "FREEZE", "FREEZING RAIN", "FROST/FREEZE",
            "FROST", "SNOW FREEZING RAIN")
 sub_data <- groupingFactorLevels(sub_data, c("FROST/FREEZE"), toMatch)
 
+toMatch <-c("^COLD$", "^WIND CHILD$", "$COLD/WIND CHILL$")
+sub_data <- groupingFactorLevels(sub_data, c("COLD/WIND CHILL"), toMatch)
+
+toMatch <-c("SNOW") 
+sub_data <- groupingFactorLevels(sub_data, c("HEAVY SNOW"), toMatch)
+
+toMatch <-c("HAIL") 
+sub_data <- groupingFactorLevels(sub_data, c("HAIL"), toMatch)
+
+# This new data type is to summarize... 
+toMatch <-c("FOG") 
+sub_data <- groupingFactorLevels(sub_data, c("DENSE/FREEZING FOG"), toMatch)
+
+toMatch <-c("HEAT") 
+sub_data <- groupingFactorLevels(sub_data, c("HEAT/EXCESSIVE HEAT"), toMatch)
+
 summary(sub_data$EVTYPE)
 ```
 
 ```
-##      THUNDERSTORM WIND                TORNADO                   HAIL 
-##                 129930                  39970                  26130 
-##            FLASH FLOOD              LIGHTNING                  FLOOD 
-##                  21746                  13293                  10532 
-##           WINTER STORM             HEAVY SNOW             HEAVY RAIN 
-##                   1508                   1342                   1105 
-##               WILDFIRE              ICE STORM   URBAN/SML STREAM FLD 
-##                    857                    708                    702 
-##         EXCESSIVE HEAT         TROPICAL STORM         WINTER WEATHER 
-##                    698                    416                    407 
-##            RIP CURRENT       WILD/FOREST FIRE              AVALANCHE 
-##                    400                    388                    268 
-##                DROUGHT               BLIZZARD           RIP CURRENTS 
-##                    266                    253                    241 
-##           FROST/FREEZE      HURRICANE/TYPHOON                   HEAT 
-##                    240                    232                    215 
-##           EXTREME COLD       LAKE-EFFECT SNOW              LANDSLIDE 
-##                    199                    194                    193 
-##            STORM SURGE          COASTAL FLOOD             LIGHT SNOW 
-##                    177                    168                    141 
-##     WINTER WEATHER/MIX              HIGH SURF                    FOG 
-##                    139                    136                    107 
-##             DUST STORM             DUST DEVIL         DRY MICROBURST 
-##                    103                     95                     78 
-##              DENSE FOG                   SNOW   HEAVY SURF/HIGH SURF 
-##                     74                     54                     50 
-##       STORM SURGE/TIDE             WATERSPOUT                   COLD 
-##                     47                     47                     38 
-##              HEAT WAVE    TROPICAL DEPRESSION                  OTHER 
-##                     35                     35                     34 
-##             HEAVY SURF         EXCESSIVE SNOW                    ICE 
-##                     32                     25                     24 
-##              ICY ROADS                  GLAZE     HEAVY SNOW SQUALLS 
-##                     22                     21                     21 
-##            HEAVY RAINS    MIXED PRECIPITATION           EXTREME HEAT 
-##                     20                     18                     17 
-##            SNOW SQUALL     HEAVY SNOW-SQUALLS                TSUNAMI 
-##                     16                     15                     14 
-##           FUNNEL CLOUD           SNOW SQUALLS             SMALL HAIL 
-##                     13                     12                     11 
-## DROUGHT/EXCESSIVE HEAT                 SEICHE ASTRONOMICAL HIGH TIDE 
-##                     10                      9                      8 
-##              HEAVY MIX              HIGH SEAS           FREEZING FOG 
-##                      8                      8                      7 
-##        LOW TEMPERATURE      UNSEASONABLY WARM            WATERSPOUT- 
-##                      7                      7                      7 
-##   HYPOTHERMIA/EXPOSURE           MIXED PRECIP               MUDSLIDE 
-##                      6                      6                      6 
-##                   RAIN               GUSTNADO        LAKESHORE FLOOD 
-##                      6                      5                      5 
-##            RECORD COLD             SNOW/SLEET          COASTAL STORM 
-##                      5                      5                      4 
-##           COLD WEATHER             HIGH WATER       LAKE EFFECT SNOW 
-##                      4                      4                      4 
-##             MICROBURST      UNSEASONABLY COLD             WILD FIRES 
-##                      4                      4                      4 
-##             WINTRY MIX             BRUSH FIRE                 FLOODS 
-##                      4                      3                      3 
-##               HAIL 275              HAILSTORM         HEAVY SNOW/ICE 
-##                      3                      3                      3 
-##             LANDSLIDES            MAJOR FLOOD              MUD SLIDE 
-##                      3                      3                      3 
-##             ROUGH SEAS           SNOW AND ICE         WET MICROBURST 
-##                      3                      3                      3 
-##              WILDFIRES  ASTRONOMICAL LOW TIDE           BLOWING SNOW 
-##                      3                      2                      2 
-##                (Other) 
-##                    174
+##        THUNDERSTORM WIND                  TORNADO                     HAIL 
+##                   119665                    39970                    26166 
+##              FLASH FLOOD                LIGHTNING                    FLOOD 
+##                    21748                    13293                    11245 
+##                HIGH WIND              STRONG WIND               HEAVY SNOW 
+##                     5522                     3372                     1880 
+##             WINTER STORM               HEAVY RAIN      HEAT/EXCESSIVE HEAT 
+##                     1508                     1105                      980 
+##                 WILDFIRE                ICE STORM               HIGH WINDS 
+##                      857                      708                      657 
+##           TROPICAL STORM           WINTER WEATHER              RIP CURRENT 
+##                      416                      407                      400 
+##         WILD/FOREST FIRE                AVALANCHE                  DROUGHT 
+##                      388                      268                      266 
+##                 BLIZZARD             RIP CURRENTS             FROST/FREEZE 
+##                      253                      241                      240 
+##        HURRICANE/TYPHOON             EXTREME COLD                LANDSLIDE 
+##                      233                      199                      193 
+##       DENSE/FREEZING FOG              STORM SURGE            COASTAL FLOOD 
+##                      189                      177                      168 
+## MARINE THUNDERSTORM WIND       WINTER WEATHER/MIX                HIGH SURF 
+##                      142                      139                      136 
+##          COLD/WIND CHILL  EXTREME COLD/WIND CHILL               DUST STORM 
+##                      128                      111                      103 
+##               DUST DEVIL                     WIND           DRY MICROBURST 
+##                       95                       84                       78 
+##             STRONG WINDS     HEAVY SURF/HIGH SURF         STORM SURGE/TIDE 
+##                       52                       50                       47 
+##               WATERSPOUT       MARINE STRONG WIND      TROPICAL DEPRESSION 
+##                       47                       46                       35 
+##                    OTHER              GUSTY WINDS               HEAVY SURF 
+##                       34                       32                       32 
+##                      ICE                ICY ROADS                    GLAZE 
+##                       24                       22                       21 
+##              HEAVY RAINS        EXTREME WINDCHILL         MARINE HIGH WIND 
+##                       20                       19                       19 
+##      MIXED PRECIPITATION                    WINDS                  TSUNAMI 
+##                       18                       18                       14 
+##             FUNNEL CLOUD               GUSTY WIND                   SEICHE 
+##                       13                       13                        9 
+##              WIND DAMAGE   ASTRONOMICAL HIGH TIDE                HEAVY MIX 
+##                        9                        8                        8 
+##                HIGH SEAS          LOW TEMPERATURE        UNSEASONABLY WARM 
+##                        8                        7                        7 
+##              WATERSPOUT-            GRADIENT WIND     HYPOTHERMIA/EXPOSURE 
+##                        7                        6                        6 
+##             MIXED PRECIP                 MUDSLIDE                     RAIN 
+##                        6                        6                        6 
+##                 GUSTNADO          HIGH WINDS/COLD          LAKESHORE FLOOD 
+##                        5                        5                        5 
+##              RECORD COLD            COASTAL STORM             COLD WEATHER 
+##                        5                        4                        4 
+##               HIGH WATER               MICROBURST        UNSEASONABLY COLD 
+##                        4                        4                        4 
+##               WILD FIRES               WINTRY MIX               BRUSH FIRE 
+##                        4                        4                        3 
+##               LANDSLIDES                MUD SLIDE               ROUGH SEAS 
+##                        3                        3                        3 
+##           WET MICROBURST                WHIRLWIND                WILDFIRES 
+##                        3                        3                        3 
+##    ASTRONOMICAL LOW TIDE         COLD TEMPERATURE                DAM BREAK 
+##                        2                        2                        2 
+##       EROSION/CSTL FLOOD       FLOOD & HEAVY RAIN                GLAZE ICE 
+##                        2                        2                        2 
+##          GROUND BLIZZARD               HEAVY SEAS              HIGH SWELLS 
+##                        2                        2                        2 
+##                  (Other) 
+##                      147
 ```
 
-```r
-toMatch <-c("SNOW", "SNOW")
-toMatch <-c("RAIN", "RAIN")
-toMatch <-c("COLD","HYPOTHERMIA/EXPOSURE", "LOW TEMPERATURE", "FREEZE", 
-            "FREEZING SPRAY", "COLD")
-toMatch <-c("LIGHTNING", "LIGHTNING")
-toMatch <-c("FOG", "FOG")
-toMatch <-c("WATER", "WATERSPOUT")
-toMatch <-c("COASTAL", "COASTAL FLOOD")
-toMatch <-c("ICE", "SMALL HAIL", "ICE")
-toMatch <-c("HOT", "WARM", "HEAT", "HEAT")
-toMatch <-c("DROUGHT", "DROWNING", "DROUGHT")
-```
+The most important climatic events are summarized in the above list, and for the purpouse of this article, it is enough.
 
-
-
+### 4. Storm Data - Summarizing the Data
 
 Now, we have two different questions to resolve:
 
@@ -441,42 +445,6 @@ rm(sub_data)
 
 Now, there are **21929 rows** or observations and **9 columns** or variables in *sub_data_health* dataset, and  **245031 rows** or observations and **9 columns** or variables in *sub_data_economic* dataset.
 
-We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. We start looking for and replacing the more harmful climatic events like TORNADO, HURRICANES, ...
-
-
-```r
-# searching by TORNADO
-toMatch <- c("TORNADO")
-
-# get the indices where there are matches
-indices <- grep(paste(toMatch, collapse="|"), sub_data_health$EVTYPE)
-
-# replacement matches with TORNADO
-sub_data_health$EVTYPE[indices] = "TORNADO"
-```
-
-We are going to do the above same process with others event types. For this purpouse, we are going to create a function to do this.
-
-
-```r
-toMatch <-c("TORNADO", "TORNADO")
-toMatch <-c("THUNDERST", "WIND", "TSTM", "THUNDERSTORM WIND")
-toMatch <-c("HURRICANE", "TYPHOON", "TROPICAL", "HURRICANE/TYPHOON")
-toMatch <-c("FLOOD", "FLOOD")
-toMatch <-c("SNOW", "SNOW")
-toMatch <-c("RAIN", "RAIN")
-toMatch <-c("COLD","HYPOTHERMIA/EXPOSURE", "LOW TEMPERATURE", "FREEZE", 
-            "FREEZING SPRAY", "COLD")
-toMatch <-c("LIGHTNING", "LIGHTNING")
-toMatch <-c("FOG", "FOG")
-toMatch <-c("WATER", "WATERSPOUT")
-toMatch <-c("COASTAL", "COASTAL FLOOD")
-toMatch <-c("ICE", "SMALL HAIL", "ICE")
-toMatch <-c("HOT", "WARM", "HEAT", "HEAT")
-toMatch <-c("DROUGHT", "DROWNING", "DROUGHT")
-```
-
-
 At this point, we are going to check the more harmful event types in our datasets.
 
 
@@ -485,34 +453,87 @@ At this point, we are going to check the more harmful event types in our dataset
 my_health_group <- group_by(sub_data_health, EVTYPE)
 
 # Get the sum of injuries and fatalities by event type
-my_health_summary <- summarise(my_health_group, sum(FATALITIES), sum(INJURIES))
+
+my_health_summary_fatalities <- summarise(my_health_group, sum(FATALITIES))
+my_health_summary_injuries <- summarise(my_health_group, sum(INJURIES))
+my_health_total_summary <- summarise(my_health_group, sum(FATALITIES),sum(INJURIES), 
+                                     TOTAL = sum(FATALITIES) + sum(INJURIES))
 
 # change tne column names
-colnames(my_health_summary) <- c("EVTYPE", "SUM_FATALITIES", "SUM_INJURIES")
+colnames(my_health_summary_fatalities) <- c("EVTYPE", "SUM_FATALITIES")
+colnames(my_health_summary_injuries) <- c("EVTYPE", "SUM_INJURIES")
+colnames(my_health_total_summary) <- c("EVTYPE", "SUM_FATALITIES", "SUM_INJURIES", "TOTAL")
 
 # Order the dataset by number of FATALITIES & INJURIES
-my_health_summary <- arrange(my_health_summary, desc(SUM_FATALITIES, SUM_INJURIES))
+my_health_summary_fatalities <- arrange(my_health_summary_fatalities, desc(SUM_FATALITIES))
+my_health_summary_injuries <- arrange(my_health_summary_injuries, desc(SUM_INJURIES))
+my_health_total_summary <- arrange(my_health_total_summary, desc(TOTAL))
 
 # Preview
-head(my_health_summary)
+my_health_summary_fatalities
 ```
 
 ```
-## Source: local data frame [6 x 3]
+## Source: local data frame [124 x 2]
 ## 
-##           EVTYPE SUM_FATALITIES SUM_INJURIES
-##           (fctr)          (dbl)        (dbl)
-## 1             NA           5661        91407
-## 2 EXCESSIVE HEAT           1903         6525
-## 3    FLASH FLOOD            978         1777
-## 4           HEAT            937         2100
-## 5      LIGHTNING            816         5230
-## 6      TSTM WIND            504         6957
+##                 EVTYPE SUM_FATALITIES
+##                 (fctr)          (dbl)
+## 1              TORNADO           5661
+## 2  HEAT/EXCESSIVE HEAT           3138
+## 3          FLASH FLOOD           1045
+## 4            LIGHTNING            816
+## 5    THUNDERSTORM WIND            711
+## 6                FLOOD            503
+## 7          RIP CURRENT            368
+## 8            HIGH WIND            248
+## 9            AVALANCHE            224
+## 10        WINTER STORM            206
+## ..                 ...            ...
 ```
 
-Now we have 447 different event types in our *my_health_summary* dataset. 
+```r
+my_health_summary_injuries
+```
+
+```
+## Source: local data frame [124 x 2]
+## 
+##                 EVTYPE SUM_INJURIES
+##                 (fctr)        (dbl)
+## 1              TORNADO        91407
+## 2    THUNDERSTORM WIND         9508
+## 3  HEAT/EXCESSIVE HEAT         9224
+## 4                FLOOD         6871
+## 5            LIGHTNING         5230
+## 6            ICE STORM         1975
+## 7          FLASH FLOOD         1810
+## 8                 HAIL         1371
+## 9    HURRICANE/TYPHOON         1333
+## 10        WINTER STORM         1321
+## ..                 ...          ...
+```
+
+```r
+my_health_total_summary
+```
+
+```
+## Source: local data frame [124 x 4]
+## 
+##                 EVTYPE SUM_FATALITIES SUM_INJURIES TOTAL
+##                 (fctr)          (dbl)        (dbl) (dbl)
+## 1              TORNADO           5661        91407 97068
+## 2  HEAT/EXCESSIVE HEAT           3138         9224 12362
+## 3    THUNDERSTORM WIND            711         9508 10219
+## 4                FLOOD            503         6871  7374
+## 5            LIGHTNING            816         5230  6046
+## 6          FLASH FLOOD           1045         1810  2855
+## 7            ICE STORM             89         1975  2064
+## 8         WINTER STORM            206         1321  1527
+## 9    HURRICANE/TYPHOON            135         1333  1468
+## 10                HAIL             15         1371  1386
+## ..                 ...            ...          ...   ...
+```
 
 
-levels(as.factor(grep("*Thunderst*", sub_data$EVTYPE, ignore.case = T, value = T)))
-my_group <- group_by(sub_data,EVTYPE, INJURIES, FATALITIES, PROPDMG, CROPDMG)
-summarise_each(my_group, funs(sum))
+
