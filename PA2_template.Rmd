@@ -26,7 +26,7 @@ output:
 ## I need to change my LOCALE (spanish) to English...
 Sys.setlocale('LC_TIME', 'en_US.UTF-8')
 
-compressedFileName <- "repdata%2Fdata_StormData.csv.bz2"
+compressedFileName <- "repdata_data_StormData.csv.bz2"
 
 URL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
 
@@ -88,7 +88,7 @@ rm(data)
 # now, we have a smaller dataset
 head(sub_data)
 ```
-
+At this moment, There are **`r nrow(sub_data)` rows** or observations and **`r ncol(sub_data)` columns** or variables in *sub_data* dataset.
 For this analysis we want to study types of weather events that are most harmful with respect to population health and with respect to economic consequences, so we want dataset observations with values over "0" (zero) in the following variables: FATALITIES, INJURIES, PROPDMG and CROPDMG.
 
 ```{r echo=TRUE, cache=TRUE}
@@ -127,20 +127,20 @@ sub_data <- mutate(sub_data, EVTYPE = as.factor(toupper(EVTYPE)))
 ```
 
 
-We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. We start looking for and replacing the more harmful climatic events like TORNADO, HURRICANES, ...
+We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. For this purpouse, the following "groupingFactorLevels" function replaces the terms passed in the "arrayNames" parameter with the term passed in the "keyName" parameter.
 
 ```{r echo=TRUE, cache=TRUE}
 
 groupingFactorLevels <- function(mydata, keyName, arrayNames) 
 {
-# searching by TORNADO
+# searching by terms inside arrayNAmes parameter
 toMatch <- arrayNames
 
 # get the indices where there are matches
 indices <- grep(paste(toMatch, collapse="|"), levels(mydata$EVTYPE))
 
 
-# replacement matches with TORNADO
+# replacement matches with keyName parameter
 levels(mydata$EVTYPE)[c(indices)] <- keyName
 
 return(mydata)
@@ -150,23 +150,24 @@ return(mydata)
 ```
 
 
-
-
-
-We are going to do the above same process with others event types. For this purpouse, we are going to create a function to do this.
+We are going to use the above function for grouping the most important climatic events, that is, the most frequent climatic events (as you can see in: summary(sub_data$EVTYPE))
 
 ```{r echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE}
 
- toMatch <-c("TORNADO", "TORNADOES")
- sub_data <- groupingFactorLevels(sub_data, c("TORNADO"), toMatch)
+toMatch <-c("TORNADO", "TORNADOES")
+sub_data <- groupingFactorLevels(sub_data, c("TORNADO"), toMatch)
 
- toMatch <-c("THUNDERST", "WIND", "TSTM", "THUNDERSTORM WIND")
+toMatch <- c("^THUNDERSTORM", "^TSTM", "^SEVERE THUNDERSTORM", "^THUNDERTORM WINDS", "^TSTM WIND ")
 sub_data <- groupingFactorLevels(sub_data, c("THUNDERSTORM WIND"), toMatch)
+
+toMatch <-c("^MARINE TSTM WIND", "^MARINE THUNDERSTORM WIND" )
+sub_data <- groupingFactorLevels(sub_data, c("MARINE THUNDERSTORM WIND"), toMatch)
 
 toMatch <-c("HURRICANE", "TYPHOON", "HURRICANE/TYPHOON")
 sub_data <- groupingFactorLevels(sub_data, c("HURRICANE/TYPHOON"), toMatch)
 
-toMatch <-c("RIVER FLOOD", "URBAN/SMALL STREAM FLOOD", "URBAN FLOODING", "URBAN FLOOD")
+toMatch <-c("RIVER FLOOD", "URBAN/SMALL STREAM FLOOD", "URBAN FLOODING", "MAJOR FLOOD", 
+            "URBAN FLOOD", "URBAN/SML STREAM FLD", "FLOOD/RAIN/WINDS", "^FLOODS$")
 sub_data <- groupingFactorLevels(sub_data, c("FLOOD"), toMatch)
 
 toMatch <-c("FLASH FLOOD", "FLASH FLOODING", "FLOODING", "FLASH FLOODS")
@@ -177,24 +178,28 @@ toMatch <-c("LIGHT FREEZING RAIN", "FREEZE", "FREEZING RAIN", "FROST/FREEZE",
            "FROST", "SNOW FREEZING RAIN")
 sub_data <- groupingFactorLevels(sub_data, c("FROST/FREEZE"), toMatch)
 
+toMatch <-c("^COLD$", "^WIND CHILD$", "$COLD/WIND CHILL$")
+sub_data <- groupingFactorLevels(sub_data, c("COLD/WIND CHILL"), toMatch)
+
+toMatch <-c("SNOW") 
+sub_data <- groupingFactorLevels(sub_data, c("HEAVY SNOW"), toMatch)
+
+toMatch <-c("HAIL") 
+sub_data <- groupingFactorLevels(sub_data, c("HAIL"), toMatch)
+
+# This new data type is to summarize... 
+toMatch <-c("FOG") 
+sub_data <- groupingFactorLevels(sub_data, c("DENSE/FREEZING FOG"), toMatch)
+
+toMatch <-c("HEAT") 
+sub_data <- groupingFactorLevels(sub_data, c("HEAT/EXCESSIVE HEAT"), toMatch)
+
 summary(sub_data$EVTYPE)
-
-toMatch <-c("SNOW", "SNOW")
-toMatch <-c("RAIN", "RAIN")
-toMatch <-c("COLD","HYPOTHERMIA/EXPOSURE", "LOW TEMPERATURE", "FREEZE", 
-            "FREEZING SPRAY", "COLD")
-toMatch <-c("LIGHTNING", "LIGHTNING")
-toMatch <-c("FOG", "FOG")
-toMatch <-c("WATER", "WATERSPOUT")
-toMatch <-c("COASTAL", "COASTAL FLOOD")
-toMatch <-c("ICE", "SMALL HAIL", "ICE")
-toMatch <-c("HOT", "WARM", "HEAT", "HEAT")
-toMatch <-c("DROUGHT", "DROWNING", "DROUGHT")
-
 ```
 
+The most important climatic events are summarized in the above list, and for the purpouse of this article, it is enough.
 
-
+### 4. Storm Data - Summarizing the Data
 
 Now, we have two different questions to resolve:
 
@@ -215,44 +220,6 @@ rm(sub_data)
 
 Now, there are **`r nrow(sub_data_health)` rows** or observations and **`r ncol(sub_data_health)` columns** or variables in *sub_data_health* dataset, and  **`r nrow(sub_data_economic)` rows** or observations and **`r ncol(sub_data_economic)` columns** or variables in *sub_data_economic* dataset.
 
-We are going to group similar climatic events that can be repetitive or similar events, like THUNDERSTORM WIND or TSTM WIND, for reduce this dataset. We start looking for and replacing the more harmful climatic events like TORNADO, HURRICANES, ...
-
-```{r echo=TRUE, cache=TRUE}
-# searching by TORNADO
-toMatch <- c("TORNADO")
-
-# get the indices where there are matches
-indices <- grep(paste(toMatch, collapse="|"), sub_data_health$EVTYPE)
-
-# replacement matches with TORNADO
-sub_data_health$EVTYPE[indices] = "TORNADO"
-
-```
-
-We are going to do the above same process with others event types. For this purpouse, we are going to create a function to do this.
-
-```{r echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE}
-
-
-toMatch <-c("TORNADO", "TORNADO")
-toMatch <-c("THUNDERST", "WIND", "TSTM", "THUNDERSTORM WIND")
-toMatch <-c("HURRICANE", "TYPHOON", "TROPICAL", "HURRICANE/TYPHOON")
-toMatch <-c("FLOOD", "FLOOD")
-toMatch <-c("SNOW", "SNOW")
-toMatch <-c("RAIN", "RAIN")
-toMatch <-c("COLD","HYPOTHERMIA/EXPOSURE", "LOW TEMPERATURE", "FREEZE", 
-            "FREEZING SPRAY", "COLD")
-toMatch <-c("LIGHTNING", "LIGHTNING")
-toMatch <-c("FOG", "FOG")
-toMatch <-c("WATER", "WATERSPOUT")
-toMatch <-c("COASTAL", "COASTAL FLOOD")
-toMatch <-c("ICE", "SMALL HAIL", "ICE")
-toMatch <-c("HOT", "WARM", "HEAT", "HEAT")
-toMatch <-c("DROUGHT", "DROWNING", "DROUGHT")
-
-```
-
-
 At this point, we are going to check the more harmful event types in our datasets.
 
 ```{r echo=TRUE, cache=TRUE}
@@ -261,22 +228,67 @@ At this point, we are going to check the more harmful event types in our dataset
 my_health_group <- group_by(sub_data_health, EVTYPE)
 
 # Get the sum of injuries and fatalities by event type
-my_health_summary <- summarise(my_health_group, sum(FATALITIES), sum(INJURIES))
+
+my_health_summary_fatalities <- summarise(my_health_group, sum(FATALITIES))
+my_health_summary_injuries <- summarise(my_health_group, sum(INJURIES))
+my_health_total_summary <- summarise(my_health_group, sum(FATALITIES),sum(INJURIES), 
+                                     TOTAL = sum(FATALITIES) + sum(INJURIES))
 
 # change tne column names
-colnames(my_health_summary) <- c("EVTYPE", "SUM_FATALITIES", "SUM_INJURIES")
+colnames(my_health_summary_fatalities) <- c("EVTYPE", "SUM_FATALITIES")
+colnames(my_health_summary_injuries) <- c("EVTYPE", "SUM_INJURIES")
+colnames(my_health_total_summary) <- c("EVTYPE", "SUM_FATALITIES", "SUM_INJURIES", "TOTAL")
 
 # Order the dataset by number of FATALITIES & INJURIES
-my_health_summary <- arrange(my_health_summary, desc(SUM_FATALITIES, SUM_INJURIES))
+my_health_summary_fatalities <- arrange(my_health_summary_fatalities, desc(SUM_FATALITIES))
+my_health_summary_injuries <- arrange(my_health_summary_injuries, desc(SUM_INJURIES))
+my_health_total_summary <- arrange(my_health_total_summary, desc(TOTAL))
 
 # Preview
-head(my_health_summary)
+my_health_summary_fatalities
+my_health_summary_injuries
+my_health_total_summary
 
 ```
 
-Now we have `r length(levels(my_health_summary$EVTYPE))` different event types in our *my_health_summary* dataset. 
+
+And now, we are going to check the more harmful event types with respect to economic consequences in our datasets.
 
 
-levels(as.factor(grep("*Thunderst*", sub_data$EVTYPE, ignore.case = T, value = T)))
-my_group <- group_by(sub_data,EVTYPE, INJURIES, FATALITIES, PROPDMG, CROPDMG)
-summarise_each(my_group, funs(sum))
+```{r echo=TRUE, cache=TRUE}
+
+# function to return the numeric exponent of given data type as is in the storm dataset
+exponent.value <- function (param) sapply(param, function (c) switch (as.character(c), 
+                                                                  "B"=1e9, "b" = 1e9, 
+                                                                  "M"=1e6, "m" = 1e6, "k" = 1e3, "K"=1e3, 1))
+# Group by event type
+my_economic_group <- group_by(sub_data_economic, EVTYPE)
+
+
+
+
+
+
+# Get the sum of injuries and fatalities by event type
+
+my_economic_summary_propdmg <- summarise(my_health_group, sum(PROPDMG))
+my_health_summary_injuries <- summarise(my_health_group, sum(INJURIES))
+my_health_total_summary <- summarise(my_health_group, sum(FATALITIES),sum(INJURIES), 
+                                     TOTAL = sum(FATALITIES) + sum(INJURIES))
+
+# change tne column names
+colnames(my_health_summary_fatalities) <- c("EVTYPE", "SUM_FATALITIES")
+colnames(my_health_summary_injuries) <- c("EVTYPE", "SUM_INJURIES")
+colnames(my_health_total_summary) <- c("EVTYPE", "SUM_FATALITIES", "SUM_INJURIES", "TOTAL")
+
+# Order the dataset by number of FATALITIES & INJURIES
+my_health_summary_fatalities <- arrange(my_health_summary_fatalities, desc(SUM_FATALITIES))
+my_health_summary_injuries <- arrange(my_health_summary_injuries, desc(SUM_INJURIES))
+my_health_total_summary <- arrange(my_health_total_summary, desc(TOTAL))
+
+# Preview
+#my_health_summary_fatalities
+#my_health_summary_injuries
+#my_health_total_summary
+
+```
