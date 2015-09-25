@@ -3,6 +3,7 @@ title: "Reproducible Research: Peer Assessment 2"
 output: 
   html_document:
     keep_md: true
+    geometry: margin=1in
 ---
 
 
@@ -12,6 +13,7 @@ output:
 
 # **Synopsis**
 
+In this article we want to study what types of weather events that are most harmful with respect to population health and with respect to economic consequences. First, we'll download the NOAA Storm Data CSV file from his website for processing. This processing involves an initial exploratory analysis that checks what variables are more relevant for our study, cleaning the data and grouping the similar events types to get a more uniform dataset. Then, we'll do a summary of our health and economic datasets and present the results showing the datasets and plotting them. Finally, we'll present a final conclusion for our health and economic results.
 
 # **Data Processing**
 
@@ -301,10 +303,7 @@ my_health_summary_fatalities <- arrange(my_health_summary_fatalities, desc(SUM_F
 my_health_summary_injuries <- arrange(my_health_summary_injuries, desc(SUM_INJURIES))
 my_health_total_summary <- arrange(my_health_total_summary, desc(TOTAL))
 
-# Preview
-my_health_summary_fatalities
-my_health_summary_injuries
-my_health_total_summary
+
 
 ```
 
@@ -352,8 +351,6 @@ We need to tranform the PROPDMGEXP and CROPDMGEXP to a numerical value and to mu
                      
 
 ```{r echo=TRUE, cache=TRUE}
-
-# We use the factor array index to access the factor values and change them...
 
 # > levels(sub_data_economic$PROPDMGEXP)
 # [1] ""  "-" "?" "+" "0" "1" "2" "3" "4" "5" "6" "7" "8" "B" "h" "H" "K" "m" "M"
@@ -405,49 +402,173 @@ my_economic_summary_propdmg <- arrange(my_economic_summary_propdmg, desc(SUM_PRO
 my_economic_summary_cropdmg <- arrange(my_economic_summary_cropdmg, desc(SUM_CROPDMG_TOTAL))
 my_economic_total_summary <- arrange(my_economic_total_summary, desc(TOTAL_DAMAGE))
 
-# Preview
-my_economic_summary_propdmg
-my_economic_summary_cropdmg
-my_economic_total_summary
+
 
 ```
 
 # **Results**
 
+### 1. Show the final data and plotting Health results and conclusions
+
+```{r echo=TRUE }
+# Preview
+head(my_health_summary_fatalities)
+head(my_health_summary_injuries)
+head(my_health_total_summary)
+```
+
+
 
 ```{r echo=TRUE, cache=TRUE}
 suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(grid))
+suppressPackageStartupMessages(library(gridExtra))
 
-## Load this script for multple plotting with ggplot2.
-## this script is available in my github repository for this assignment
-source("multiplot.R")
-
-# override the main title in the original plot
-# p <- p + ggtitle("Histogram FATALITIES")
-x <- my_health_summary_fatalities[1:20, ]
-
+#Subsetting the six most relevant events
+x <- my_health_summary_fatalities[1:6, ]
+y <- my_health_summary_injuries[1:6, ]
+z <- my_health_total_summary[1:6, ]
 
 x$EVTYPE <- reorder(x$EVTYPE, x$SUM_FATALITIES)
 
-# Create a second plot for the new dataset with imputing missing values
-p2 <- ggplot(x, aes(x=EVTYPE, y=SUM_FATALITIES, fill=SUM_FATALITIES))
-p2 <- p2 + geom_histogram(stat='identity') + coord_flip()
-p2 <- p2 + scale_fill_gradient("Nº Fatalities", 
+# Create a first plot for the fatalities dataset 
+p <- ggplot(x, aes(x=EVTYPE, y=SUM_FATALITIES, fill=SUM_FATALITIES))
+p <- p + geom_histogram(stat='identity') + coord_flip()
+p <- p + scale_fill_gradient("Nº Fatalities", 
                              low = "green", 
                              high = "red")
- # p2 <- p2 + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
-p2 <- p2 + theme(text = element_text(size=10)) 
+ # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
+ p <- p + theme(text = element_text(size=8)) 
+ p <- p + xlab("Event Type")
+ p <- p + ylab("Total Fatalities")
+ p <- p + ggtitle("Total Fatalities By Event Type")
+ 
+ 
+ y$EVTYPE <- reorder(y$EVTYPE, y$SUM_INJURIES)
+
+# Create a second plot for the injuries dataset 
+p2 <- ggplot(y, aes(x=EVTYPE, y=SUM_INJURIES, fill=SUM_INJURIES))
+p2 <- p2 + geom_histogram(stat='identity') + coord_flip()
+p2 <- p2 + scale_fill_gradient("Nº Injuries", 
+                             low = "green", 
+                             high = "red")
+ # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
+ p2 <- p2 + theme(text = element_text(size=8)) 
  p2 <- p2 + xlab("Event Type")
- p2 <- p2 + ylab("Total Fatalities")
- p2 <- p2 + ggtitle("Histogram - Total Fatalities By Event Type")
+ p2 <- p2 + ylab("Total Injuries")
+ p2 <- p2 + ggtitle("Total Injuries By Event Type")
+ 
+ 
+ z$EVTYPE <- reorder(z$EVTYPE, z$TOTAL)
 
-## Call to multipot function for plotting the 2 plots in one column
-# multiplot(p, p2, cols = 1)
-print(p2)
+# Create a third plot for the TOTAL health dataset 
+p3 <- ggplot(z, aes(x=EVTYPE, y=TOTAL, fill=TOTAL))
+p3 <- p3 + geom_histogram(stat='identity') + coord_flip()
+p3 <- p3 + scale_fill_gradient("Nº Total", 
+                             low = "green", 
+                             high = "red")
+ # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
+ p3 <- p3 + theme(text = element_text(size=8)) 
+ p3 <- p3 + xlab("Event Type")
+ p3 <- p3 + ylab("Total Fatalities + Injuries")
+ p3 <- p3 + ggtitle("Total Fatalities + Injuries By Event Type")
+ 
+ 
+ ## Call to multipot function for plotting the 2 plots in one column
+ # multiplot(p, p3, p2, cols = 2)
+ # multiplot(p, p2, p3, matrix(c(1,2,3,3), nrow=1, byrow=TRUE))
+
+ # Get the gtables
+gA <- ggplotGrob(p)
+gB <- ggplotGrob(p2)
+gC <- ggplotGrob(p3)
+
+grid.arrange(gA, gB, gC, nrow=3)
+
+```
+
+As a conclusion we can see clearly the TORNADO as the event type that is most harmful with respect to population health, followed by HEAT/EXCESSIVE HEAT and THUNDERSTORM WIND. 
+
+### 2. Show the final data and plotting Economic results and conclusions
+
+
+```{r echo=TRUE}
+# Preview
+head(my_economic_summary_propdmg)
+head(my_economic_summary_cropdmg)
+head(my_economic_total_summary)
+
 
 ```
 
 
 
+```{r echo=TRUE, cache=TRUE}
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(grid))
+suppressPackageStartupMessages(library(gridExtra))
+
+#Subsetting the six most relevant events
+x <- my_economic_summary_propdmg[1:6, ]
+y <- my_economic_summary_cropdmg[1:6, ]
+z <- my_economic_total_summary[1:6, ]
+
+x$EVTYPE <- reorder(x$EVTYPE, x$SUM_PROPDMG_TOTAL)
+
+# Create a first plot for the properties damage dataset 
+p <- ggplot(x, aes(x=EVTYPE, y=SUM_PROPDMG_TOTAL, fill=SUM_PROPDMG_TOTAL))
+p <- p + geom_histogram(stat='identity') + coord_flip()
+p <- p + scale_fill_gradient("USD", 
+                             low = "green", 
+                             high = "red")
+ # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
+ p <- p + theme(text = element_text(size=8)) 
+ p <- p + xlab("Event Type")
+ p <- p + ylab("Total Property Damage (USD)")
+ p <- p + ggtitle("Total Property Damage (USD) By Event Type")
+ 
+ 
+ y$EVTYPE <- reorder(y$EVTYPE, y$SUM_CROPDMG_TOTAL)
+
+# Create a second plot for the crop damage dataset 
+p2 <- ggplot(y, aes(x=EVTYPE, y=SUM_CROPDMG_TOTAL, fill=SUM_CROPDMG_TOTAL))
+p2 <- p2 + geom_histogram(stat='identity') + coord_flip()
+p2 <- p2 + scale_fill_gradient("USD", 
+                             low = "green", 
+                             high = "red")
+ # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
+ p2 <- p2 + theme(text = element_text(size=8)) 
+ p2 <- p2 + xlab("Event Type")
+ p2 <- p2 + ylab("Total Crop Damage (USD)")
+ p2 <- p2 + ggtitle("Total Crop Damage By Event Type")
+ 
+ 
+ z$EVTYPE <- reorder(z$EVTYPE, z$TOTAL_DAMAGE)
+
+# Create a third plot for the TOTAL economic dataset 
+p3 <- ggplot(z, aes(x=EVTYPE, y=TOTAL_DAMAGE, fill=TOTAL_DAMAGE))
+p3 <- p3 + geom_histogram(stat='identity') + coord_flip()
+p3 <- p3 + scale_fill_gradient("USD", 
+                             low = "green", 
+                             high = "red")
+ # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
+ p3 <- p3 + theme(text = element_text(size=8)) 
+ p3 <- p3 + xlab("Event Type")
+ p3 <- p3 + ylab("Total Properties + Crop Damage")
+ p3 <- p3 + ggtitle("Total Properties + Crop Damage By Event Type")
+ 
+ 
+ ## Call to multipot function for plotting the 2 plots in one column
+ # multiplot(p, p3, p2, cols = 2)
+ # multiplot(p, p2, p3, matrix(c(1,2,3,3), nrow=1, byrow=TRUE))
+
+ # Get the gtables
+gA <- ggplotGrob(p)
+gB <- ggplotGrob(p2)
+gC <- ggplotGrob(p3)
+
+grid.arrange(gA, gB, gC, nrow=3)
+
 ```
 
+As a conclusion we can see clearly the FLOOD as the event type that is most harmful with respect to economic consequences, followed by HURRICANE/TYPHOON and TORNADO. Although the DROUGHT event is the most harmful with respect to CROP damage.
