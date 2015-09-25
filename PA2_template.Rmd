@@ -68,9 +68,9 @@ Reading these two websites above and, for the topic of this paper, we can subset
 * FATALITIES (numerical value for an occurrence of death)
 * INJURIES (numerical value for non fatal damage, hurt, harm, ...)
 * PROPDMG (numerical value for property damage)
-* PROPDMGEXP (value for adjusting PROPDMG value)
+* PROPDMGEXP (exponent -symbol/value- for adjusting PROPDMG value)
 * CROPDMG (numerical value for crop damage)
-* CROPDMGEXP (value for adjusting CROPDMG value)
+* CROPDMGEXP (exponent -symbol/value- for adjusting CROPDMG value)
 
 The others columns or variables aren't important for the analysis in this article.
 
@@ -157,7 +157,7 @@ We are going to use the above function for grouping the most important climatic 
 toMatch <-c("TORNADO", "TORNADOES")
 sub_data <- groupingFactorLevels(sub_data, c("TORNADO"), toMatch)
 
-toMatch <- c("^THUNDERSTORM", "^TSTM", "^SEVERE THUNDERSTORM", "^THUNDERTORM WINDS", "^TSTM WIND ")
+toMatch <- c("^THUNDERSTORM", "^TSTM", "^SEVERE THUNDERSTORM", "^THUNDERTORM WINDS", "^TSTM WIND", "TSTM WIND")
 sub_data <- groupingFactorLevels(sub_data, c("THUNDERSTORM WIND"), toMatch)
 
 toMatch <-c("^MARINE TSTM WIND", "^MARINE THUNDERSTORM WIND" )
@@ -166,33 +166,90 @@ sub_data <- groupingFactorLevels(sub_data, c("MARINE THUNDERSTORM WIND"), toMatc
 toMatch <-c("HURRICANE", "TYPHOON", "HURRICANE/TYPHOON")
 sub_data <- groupingFactorLevels(sub_data, c("HURRICANE/TYPHOON"), toMatch)
 
+toMatch <-c("TROPICAL STORM")
+sub_data <- groupingFactorLevels(sub_data, c("TROPICAL STORM"), toMatch)
+
+
 toMatch <-c("RIVER FLOOD", "URBAN/SMALL STREAM FLOOD", "URBAN FLOODING", "MAJOR FLOOD", 
-            "URBAN FLOOD", "URBAN/SML STREAM FLD", "FLOOD/RAIN/WINDS", "^FLOODS$")
+            "URBAN FLOOD", "URBAN/SML STREAM FLD", "FLOOD/RAIN/WINDS", "^FLOODS$", 
+            "FLOOD & HEAVY RAIN", "RIVER AND STREAM FLOOD")
 sub_data <- groupingFactorLevels(sub_data, c("FLOOD"), toMatch)
 
-toMatch <-c("FLASH FLOOD", "FLASH FLOODING", "FLOODING", "FLASH FLOODS")
+toMatch <-c("FLASH FLOOD", "FLASH FLOODING", "FLOODING", "FLASH FLOODS", "FLOOD FLASH",
+            "FLOOD/FLASH")
 sub_data <- groupingFactorLevels(sub_data, c("FLASH FLOOD"), toMatch)
+
+toMatch <-c("COASTAL FLOOD", "COASTAL", "BEACH EROSION", "EROSION/CSTL FLOOD", "CSTL")
+sub_data <- groupingFactorLevels(sub_data, c("COASTAL FLOOD"), toMatch)
+
 
 toMatch <-c("LIGHT FREEZING RAIN", "FREEZE", "FREEZING RAIN", "FROST/FREEZE", 
            "AGRICULTURAL FREEZE", "FREEZING RAIN/SNOW", "DAMAGING FREEZE", "FREEZING DRIZZLE", 
-           "FROST", "SNOW FREEZING RAIN")
+           "FROST", "SNOW FREEZING RAIN", "ICY", "FREEZING SPRAY")
 sub_data <- groupingFactorLevels(sub_data, c("FROST/FREEZE"), toMatch)
 
 toMatch <-c("^COLD$", "^WIND CHILD$", "$COLD/WIND CHILL$")
 sub_data <- groupingFactorLevels(sub_data, c("COLD/WIND CHILL"), toMatch)
 
+toMatch <-c("^EXTREME WIND CHILL", "RECORD COLD")
+sub_data <- groupingFactorLevels(sub_data, c("EXTREME COLD/WIND CHILL"), toMatch)
+
 toMatch <-c("SNOW") 
 sub_data <- groupingFactorLevels(sub_data, c("HEAVY SNOW"), toMatch)
 
-toMatch <-c("HAIL") 
+toMatch <-c("^HAIL") 
 sub_data <- groupingFactorLevels(sub_data, c("HAIL"), toMatch)
+
+toMatch <-c("MARINE HAIL") 
+sub_data <- groupingFactorLevels(sub_data, c("MARINE HAIL"), toMatch)
 
 # This new data type is to summarize... 
 toMatch <-c("FOG") 
 sub_data <- groupingFactorLevels(sub_data, c("DENSE/FREEZING FOG"), toMatch)
 
-toMatch <-c("HEAT") 
-sub_data <- groupingFactorLevels(sub_data, c("HEAT/EXCESSIVE HEAT"), toMatch)
+toMatch <-c("^HEAT") 
+sub_data <- groupingFactorLevels(sub_data, c("HEAT"), toMatch)
+
+toMatch <-c("^EXCESSIVE HEAT", "DROUGHT/EXCESSIVE HEAT", "RECORD HEAT") 
+sub_data <- groupingFactorLevels(sub_data, c("EXCESSIVE HEAT"), toMatch)
+
+#toMatch <-c("^DROUGHT") 
+#sub_data <- groupingFactorLevels(sub_data, c("DROUGHT"), toMatch)
+
+toMatch <-c("BLIZZARD") 
+sub_data <- groupingFactorLevels(sub_data, c("BLIZZARD"), toMatch)
+
+toMatch <-c("^EXTREME COLD", "EXTENDED COLD") 
+sub_data <- groupingFactorLevels(sub_data, c("EXTREME COLD/WIND CHILL"), toMatch)
+
+toMatch <-c("^COLD") 
+sub_data <- groupingFactorLevels(sub_data, c("COLD/WIND CHILL"), toMatch)
+
+toMatch <-c("^ICE STORM", "BLACK ICE", "GLAZE ICE", "ICE FLOES", "GLAZE/ICE STORM", "GLAZE") 
+sub_data <- groupingFactorLevels(sub_data, c("ICE STORM"), toMatch)
+
+toMatch <-c("^HIGH WIND", "^WIND", "GUSTY WIND", "GRADIENT WIND") 
+sub_data <- groupingFactorLevels(sub_data, c("HIGH WIND"), toMatch)
+
+toMatch <-c("^STRONG WIND") 
+sub_data <- groupingFactorLevels(sub_data, c("STRONG WIND"), toMatch)
+
+toMatch <-c("DUST DEVIL") 
+sub_data <- groupingFactorLevels(sub_data, c("DUST DEVIL"), toMatch)
+
+toMatch <-c("^DUST$", "BLOWING DUST") 
+sub_data <- groupingFactorLevels(sub_data, c("DUST"), toMatch)
+
+toMatch <-c("^RAIN", "HEAVY PRECIPITATION", "^HEAVY RAIN", "RAINFALL", "UNSEASONAL RAIN", "RAIN", "PRECIP") 
+sub_data <- groupingFactorLevels(sub_data, c("HEAVY RAIN"), toMatch)
+
+toMatch <-c("SMOKE") 
+sub_data <- groupingFactorLevels(sub_data, c("DENSE SMOKE"), toMatch)
+
+toMatch <-c("AVALACE") 
+sub_data <- groupingFactorLevels(sub_data, c("AVALANCHE"), toMatch)
+
+
 
 summary(sub_data$EVTYPE)
 ```
@@ -252,43 +309,145 @@ my_health_total_summary
 ```
 
 
-And now, we are going to check the more harmful event types with respect to economic consequences in our datasets.
+And now, we are going to check the more harmful event types with respect to economic consequences. Our dataset has four fields:
 
+* PROPDMG (numerical value for property damage)
+* PROPDMGEXP (exponent -symbol/value- for adjusting PROPDMG value)
+* CROPDMG (numerical value for crop damage)
+* CROPDMGEXP (exponent -symbol/value- for adjusting CROPDMG value)
+
+PROPDMGEXP and CROPDMGEXP fields are factor variables with the following values:
 
 ```{r echo=TRUE, cache=TRUE}
 
-# function to return the numeric exponent of given data type as is in the storm dataset
-exponent.value <- function (param) sapply(param, function (c) switch (as.character(c), 
-                                                                  "B"=1e9, "b" = 1e9, 
-                                                                  "M"=1e6, "m" = 1e6, "k" = 1e3, "K"=1e3, 1))
+levels(sub_data_economic$PROPDMGEXP)
+levels(sub_data_economic$CROPDMGEXP)
+
+```
+
+We need to tranform the PROPDMGEXP and CROPDMGEXP to a numerical value and to multiply by PROPDMG and CROPDMG values, respectively. In this way, we will have the damage value. The next table shows the levels of the factor variable and their numerical values associated:
+
+                     * ""  = 1 
+                     * "-" = 1
+                     * "?" = 1
+                     * "+" = 1
+                     * "0" = 1
+                     * "1" = 10
+                     * "2" = 100
+                     * "3" = 1000
+                     * "4" = 10000
+                     * "5" = 100000
+                     * "6" = 1000000
+                     * "7" = 10000000
+                     * "8" = 100000000
+                     * "9" = 1000000000
+                     * "h" = 100
+                     * "H" = 100
+                     * "k" = 1000
+                     * "K" = 1000
+                     * "m" = 1000000
+                     * "M" = 1000000
+                     * "b" = 1000000000
+                     * "B" = 1000000000
+                     
+
+```{r echo=TRUE, cache=TRUE}
+
+# We use the factor array index to access the factor values and change them...
+
+# > levels(sub_data_economic$PROPDMGEXP)
+# [1] ""  "-" "?" "+" "0" "1" "2" "3" "4" "5" "6" "7" "8" "B" "h" "H" "K" "m" "M"
+
+levels(sub_data_economic$PROPDMGEXP) <- c(1,1,1,1,1,
+                                          10,100,1000,10000,100000,1000000,
+                                          10000000,100000000,1000000000,
+                                          100, 100, 1000, 1000000, 1000000)
+
+
+# > levels(sub_data_economic$CROPDMGEXP)
+# [1] ""  "?" "0" "2" "B" "k" "K" "m" "M"
+
+levels(sub_data_economic$CROPDMGEXP) <- c(1,1,1,100,1000000000,1000,1000,1000000,1000000)
+
+# Show the new levels
+levels(sub_data_economic$PROPDMGEXP)
+levels(sub_data_economic$CROPDMGEXP)
+
+```
+
+Now, we can calculate the numerical crop and properties damage in dollars.
+
+```{r echo=TRUE, cache=TRUE}
+
+# Add two new variables with the total damage, PROPDMG_TOTAL and CROPDMG_TOTAL
+sub_data_economic <- sub_data_economic %>% 
+                     mutate(PROPDMG_TOTAL = PROPDMG * as.numeric(as.character(PROPDMGEXP)), 
+                            CROPDMG_TOTAL = CROPDMG * as.numeric(as.character(CROPDMGEXP)))
+
+
 # Group by event type
 my_economic_group <- group_by(sub_data_economic, EVTYPE)
 
-
-
-
-
-
 # Get the sum of injuries and fatalities by event type
-
-my_economic_summary_propdmg <- summarise(my_health_group, sum(PROPDMG))
-my_health_summary_injuries <- summarise(my_health_group, sum(INJURIES))
-my_health_total_summary <- summarise(my_health_group, sum(FATALITIES),sum(INJURIES), 
-                                     TOTAL = sum(FATALITIES) + sum(INJURIES))
+my_economic_summary_propdmg <- summarise(my_economic_group, sum(PROPDMG_TOTAL))
+my_economic_summary_cropdmg <- summarise(my_economic_group, sum(CROPDMG_TOTAL))
+my_economic_total_summary <- summarise(my_economic_group, sum(PROPDMG_TOTAL),sum(CROPDMG_TOTAL),
+                                     TOTAL = sum(PROPDMG_TOTAL) + sum(CROPDMG_TOTAL))
 
 # change tne column names
-colnames(my_health_summary_fatalities) <- c("EVTYPE", "SUM_FATALITIES")
-colnames(my_health_summary_injuries) <- c("EVTYPE", "SUM_INJURIES")
-colnames(my_health_total_summary) <- c("EVTYPE", "SUM_FATALITIES", "SUM_INJURIES", "TOTAL")
+colnames(my_economic_summary_propdmg) <- c("EVTYPE", "SUM_PROPDMG_TOTAL")
+colnames(my_economic_summary_cropdmg) <- c("EVTYPE", "SUM_CROPDMG_TOTAL")
+colnames(my_economic_total_summary) <- c("EVTYPE", "SUM_PROPDMG_TOTAL", 
+                                          "SUM_CROPDMG_TOTAL", "TOTAL_DAMAGE")
 
-# Order the dataset by number of FATALITIES & INJURIES
-my_health_summary_fatalities <- arrange(my_health_summary_fatalities, desc(SUM_FATALITIES))
-my_health_summary_injuries <- arrange(my_health_summary_injuries, desc(SUM_INJURIES))
-my_health_total_summary <- arrange(my_health_total_summary, desc(TOTAL))
+# Order the dataset by number of total PROP. DAMAGE & total CROP DAMAGE
+my_economic_summary_propdmg <- arrange(my_economic_summary_propdmg, desc(SUM_PROPDMG_TOTAL))
+my_economic_summary_cropdmg <- arrange(my_economic_summary_cropdmg, desc(SUM_CROPDMG_TOTAL))
+my_economic_total_summary <- arrange(my_economic_total_summary, desc(TOTAL_DAMAGE))
 
 # Preview
-#my_health_summary_fatalities
-#my_health_summary_injuries
-#my_health_total_summary
+my_economic_summary_propdmg
+my_economic_summary_cropdmg
+my_economic_total_summary
 
 ```
+
+# **Results**
+
+
+```{r echo=TRUE, cache=TRUE}
+suppressPackageStartupMessages(library(ggplot2))
+
+## Load this script for multple plotting with ggplot2.
+## this script is available in my github repository for this assignment
+source("multiplot.R")
+
+# override the main title in the original plot
+# p <- p + ggtitle("Histogram FATALITIES")
+x <- my_health_summary_fatalities[1:20, ]
+
+
+x$EVTYPE <- reorder(x$EVTYPE, x$SUM_FATALITIES)
+
+# Create a second plot for the new dataset with imputing missing values
+p2 <- ggplot(x, aes(x=EVTYPE, y=SUM_FATALITIES, fill=SUM_FATALITIES))
+p2 <- p2 + geom_histogram(stat='identity') + coord_flip()
+p2 <- p2 + scale_fill_gradient("Nº Fatalities", 
+                             low = "green", 
+                             high = "red")
+ # p2 <- p2 + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
+p2 <- p2 + theme(text = element_text(size=10)) 
+ p2 <- p2 + xlab("Event Type")
+ p2 <- p2 + ylab("Total Fatalities")
+ p2 <- p2 + ggtitle("Histogram - Total Fatalities By Event Type")
+
+## Call to multipot function for plotting the 2 plots in one column
+# multiplot(p, p2, cols = 1)
+print(p2)
+
+```
+
+
+
+```
+
