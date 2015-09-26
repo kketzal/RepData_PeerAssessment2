@@ -7,8 +7,22 @@
 
 # **Synopsis**
 
-In this article we want to study what types of weather events that are most harmful with respect to population health and with respect to economic consequences. First, we'll download the NOAA Storm Data CSV file from his website for processing. This processing involves an initial exploratory analysis that checks what variables are more relevant for our study, cleaning the data and grouping the similar events types to get a more uniform dataset. Then, we'll do a summary of our health and economic datasets and present the results showing the datasets and plotting them. Finally, we'll present a final conclusion for our health and economic results.
+In this article we want to study what types of weather events that are most harmful with respect to population health and with respect to economic consequences. First, we'll download the NOAA Storm Data CSV file from his website for processing. This processing involves an initial exploratory analysis that checks what variables are more relevant for us, and discarding the other variables that are not as relevant to our study. Also, the cleaning process check the event type variable of the data and grouping the similar events types to get a more uniform dataset. Then, we'll do a summary of our health and economic datasets and present the results showing the data of our datasets in text format and plotting them into 2 plots within a grid panel style. Finally, we'll present a final conclusion for our health and economic results.
 
+The following is an index of the steps that we have taken:
+
+              # Title
+              # Synopsys
+              # Data Processing
+                * Loading and preprocessing the data
+                  - 1. Downloading/loading "Storm Data" file and reading the CSV file
+                  - 2. Exploratory analysis
+                  - 3. Cleaning the Data
+                  - 4. Summarizing the Data
+              # Results
+                * Show the final data and plotting Health results and conclusions
+                * Show the final data and plotting Economic results and conclusions
+                    
 # **Data Processing**
 
 
@@ -93,7 +107,7 @@ head(data)
 ## 6     3450      8748          0          0              6
 ```
 
-### 2. Storm Data - Exploratory analysis 
+### 2. Exploratory analysis 
 
 There is some documentation of this dataset available [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). 
 More information can be obtained from the [NOAA Storm Events Database](http://www.ncdc.noaa.gov/stormevents/ftp.jsp). 
@@ -189,7 +203,7 @@ summary(sub_data)
 ##                    (Other):     7
 ```
 
-### 3. Storm Data - Cleaning the Data
+### 3. Cleaning the Data
 
 In the official documentation, [here](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf), we can read that there are 48 event types (chapter 7, points from 7.1 to 7.48, or the Storm Data Event Table in the page 6 of the above PDF document), and we have 985 event types in our dataset. We'll need to transform and reduce them. 
 
@@ -481,7 +495,7 @@ summary(sub_data$EVTYPE)
 
 The most important climatic events are summarized in the above list, and for the purpouse of this article, it is enough.
 
-### 4. Storm Data - Summarizing the Data
+### 4. Summarizing the Data
 
 Now, we have two different questions to resolve:
 
@@ -628,7 +642,7 @@ sub_data_economic <- sub_data_economic %>%
 # Group by event type
 my_economic_group <- group_by(sub_data_economic, EVTYPE)
 
-# Get the sum of injuries and fatalities by event type
+# Get the sum of properties and crop damage by event type
 my_economic_summary_propdmg <- summarise(my_economic_group, sum(PROPDMG_TOTAL))
 my_economic_summary_cropdmg <- summarise(my_economic_group, sum(CROPDMG_TOTAL))
 my_economic_total_summary <- summarise(my_economic_group, sum(PROPDMG_TOTAL),sum(CROPDMG_TOTAL),
@@ -648,7 +662,7 @@ my_economic_total_summary <- arrange(my_economic_total_summary, desc(TOTAL_DAMAG
 
 # **Results**
 
-### 1. Show the final data and plotting Health results and conclusions
+### Show the final data and plotting Health results and conclusions
 
 
 ```r
@@ -657,10 +671,7 @@ head(my_health_summary_fatalities)
 ```
 
 ```
-## Source: local data frame [6 x 2]
-## 
 ##              EVTYPE SUM_FATALITIES
-##              (fctr)          (dbl)
 ## 1           TORNADO           5661
 ## 2    EXCESSIVE HEAT           1907
 ## 3              HEAT           1118
@@ -674,10 +685,7 @@ head(my_health_summary_injuries)
 ```
 
 ```
-## Source: local data frame [6 x 2]
-## 
 ##              EVTYPE SUM_INJURIES
-##              (fctr)        (dbl)
 ## 1           TORNADO        91407
 ## 2 THUNDERSTORM WIND         9517
 ## 3             FLOOD         6871
@@ -691,10 +699,7 @@ head(my_health_total_summary)
 ```
 
 ```
-## Source: local data frame [6 x 4]
-## 
 ##              EVTYPE SUM_FATALITIES SUM_INJURIES TOTAL
-##              (fctr)          (dbl)        (dbl) (dbl)
 ## 1           TORNADO           5661        91407 97068
 ## 2 THUNDERSTORM WIND            720         9517 10237
 ## 3    EXCESSIVE HEAT           1907         6575  8482
@@ -727,7 +732,7 @@ p <- p + scale_fill_gradient("Nº Fatalities",
  # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
  p <- p + theme(text = element_text(size=8)) 
  p <- p + xlab("Event Type")
- p <- p + ylab("Total Fatalities")
+ p <- p + ylab("Total Number of Fatalities")
  p <- p + ggtitle("Total Fatalities By Event Type")
  
  
@@ -742,7 +747,7 @@ p2 <- p2 + scale_fill_gradient("Nº Injuries",
  # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
  p2 <- p2 + theme(text = element_text(size=8)) 
  p2 <- p2 + xlab("Event Type")
- p2 <- p2 + ylab("Total Injuries")
+ p2 <- p2 + ylab("Total Number of Injuries")
  p2 <- p2 + ggtitle("Total Injuries By Event Type")
  
  
@@ -757,7 +762,7 @@ p3 <- p3 + scale_fill_gradient("Nº Total",
  # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
  p3 <- p3 + theme(text = element_text(size=8)) 
  p3 <- p3 + xlab("Event Type")
- p3 <- p3 + ylab("Total Fatalities + Injuries")
+ p3 <- p3 + ylab("Total Number of Fatalities + Injuries")
  p3 <- p3 + ggtitle("Total Fatalities + Injuries By Event Type")
  
  
@@ -777,7 +782,7 @@ grid.arrange(gA, gB, gC, nrow=3)
 
 As a conclusion we can see clearly the TORNADO as the event type that is most harmful with respect to population health, followed by HEAT/EXCESSIVE HEAT and THUNDERSTORM WIND. 
 
-### 2. Show the final data and plotting Economic results and conclusions
+### Show the final data and plotting Economic results and conclusions
 
 
 
@@ -787,10 +792,7 @@ head(my_economic_summary_propdmg)
 ```
 
 ```
-## Source: local data frame [6 x 2]
-## 
 ##              EVTYPE SUM_PROPDMG_TOTAL
-##              (fctr)             (dbl)
 ## 1             FLOOD      150097910107
 ## 2 HURRICANE/TYPHOON       85356410010
 ## 3           TORNADO       58603317926
@@ -804,10 +806,7 @@ head(my_economic_summary_cropdmg)
 ```
 
 ```
-## Source: local data frame [6 x 2]
-## 
 ##              EVTYPE SUM_CROPDMG_TOTAL
-##              (fctr)             (dbl)
 ## 1           DROUGHT       13972566000
 ## 2             FLOOD       10842080550
 ## 3 HURRICANE/TYPHOON        5516117800
@@ -821,10 +820,7 @@ head(my_economic_total_summary)
 ```
 
 ```
-## Source: local data frame [6 x 4]
-## 
 ##              EVTYPE SUM_PROPDMG_TOTAL SUM_CROPDMG_TOTAL TOTAL_DAMAGE
-##              (fctr)             (dbl)             (dbl)        (dbl)
 ## 1             FLOOD      150097910107       10842080550 160939990657
 ## 2 HURRICANE/TYPHOON       85356410010        5516117800  90872527810
 ## 3           TORNADO       58603317926         417461520  59020779446
@@ -857,8 +853,8 @@ p <- p + scale_fill_gradient("USD",
  # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
  p <- p + theme(text = element_text(size=8)) 
  p <- p + xlab("Event Type")
- p <- p + ylab("Total Property Damage (USD)")
- p <- p + ggtitle("Total Property Damage (USD) By Event Type")
+ p <- p + ylab("Total Property Damage in USD")
+ p <- p + ggtitle("Total Property Damage By Event Type")
  
  
  y$EVTYPE <- reorder(y$EVTYPE, y$SUM_CROPDMG_TOTAL)
@@ -872,7 +868,7 @@ p2 <- p2 + scale_fill_gradient("USD",
  # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
  p2 <- p2 + theme(text = element_text(size=8)) 
  p2 <- p2 + xlab("Event Type")
- p2 <- p2 + ylab("Total Crop Damage (USD)")
+ p2 <- p2 + ylab("Total Crop Damage in USD")
  p2 <- p2 + ggtitle("Total Crop Damage By Event Type")
  
  
@@ -887,7 +883,7 @@ p3 <- p3 + scale_fill_gradient("USD",
  # p <- p + theme(text = element_text(size=10),axis.text.x = element_text(angle=90, vjust=1))
  p3 <- p3 + theme(text = element_text(size=8)) 
  p3 <- p3 + xlab("Event Type")
- p3 <- p3 + ylab("Total Properties + Crop Damage")
+ p3 <- p3 + ylab("Total Damage in USD")
  p3 <- p3 + ggtitle("Total Properties + Crop Damage By Event Type")
  
  
